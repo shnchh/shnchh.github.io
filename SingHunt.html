@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a12">
+    <title>SingaWild Watch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=MedievalSharp&display=swap');
+        
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+        
+        html {
+            background: #050608;
+        }
+        
+        body { 
+            font-family: 'Crimson Pro', serif; 
+            background: 
+                radial-gradient(ellipse at 15% 10%, rgba(16, 69, 56, 0.25) 0%, transparent 45%),
+                radial-gradient(ellipse at 85% 20%, rgba(20, 83, 45, 0.15) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 80%, rgba(30, 58, 95, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 60%, rgba(45, 80, 60, 0.1) 0%, transparent 35%),
+                linear-gradient(180deg, #050608 0%, #0a0f0d 30%, #060a0c 60%, #080b08 100%);
+            background-attachment: fixed;
+            color: #d4e5dc;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        h1, h2, h3, .fantasy-font {
+            font-family: 'Cinzel', serif;
+        }
+        
+        .medieval-text {
+            font-family: 'MedievalSharp', cursive;
+        }
+        
+        .animate-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Parchment Effect - Midnight Jungle */
+        .parchment {
+            background: linear-gradient(135deg, #0c1410 0%, #0a100e 50%, #0c1410 100%);
+            border: 2px solid #1a3a2e;
+            box-shadow: inset 0 0 30px rgba(16, 69, 56, 0.15), 0 4px 15px rgba(0,0,0,0.7), 0 0 40px rgba(20, 83, 45, 0.08);
+        }
+        
+        /* Fantasy Card Border - Forest Moonlight */
+        .fantasy-card {
+            border: 3px solid #2d5a4a;
+            border-image: linear-gradient(135deg, #4a9c7d 0%, #2d5a4a 50%, #4a9c7d 100%) 1;
+            box-shadow: 0 4px 15px rgba(20, 83, 45, 0.3), inset 0 1px 0 rgba(120, 200, 160, 0.15), 0 0 30px rgba(16, 69, 56, 0.15);
+            position: relative;
+            background: linear-gradient(180deg, #0c1410 0%, #080c0a 100%);
+        }
+        .fantasy-card::before {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px; right: 3px; bottom: 3px;
+            border: 1px solid rgba(180, 200, 190, 0.15);
+            pointer-events: none;
+        }
+        .fantasy-card::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid rgba(100, 150, 130, 0.1);
+            pointer-events: none;
+        }
+        
+        /* Ornate Corners - Silver Moonlight */
+        .ornate-corner {
+            width: 20px; height: 20px;
+            background: linear-gradient(135deg, #a8c5b8, #607d72);
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+        }
+        .ornate-corner.tr { transform: rotate(90deg); }
+        .ornate-corner.br { transform: rotate(180deg); }
+        .ornate-corner.bl { transform: rotate(270deg); }
+
+        /* Magical Glows - Midnight Jungle Theme */
+        .glow-gold { box-shadow: 0 0 20px rgba(180, 160, 100, 0.4), 0 0 40px rgba(200, 180, 120, 0.2); }
+        .glow-emerald { box-shadow: 0 0 20px rgba(52, 211, 153, 0.5), 0 0 40px rgba(16, 185, 129, 0.25); }
+        .glow-mystical { box-shadow: 0 0 25px rgba(74, 156, 125, 0.35), 0 0 50px rgba(20, 83, 45, 0.2), 0 0 80px rgba(30, 58, 95, 0.15); }
+        .glow-moonlight { box-shadow: 0 0 20px rgba(180, 200, 220, 0.3), 0 0 40px rgba(150, 180, 200, 0.15); }
+        .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(20, 83, 45, 0.5); }
+        .text-glow-gold { text-shadow: 0 0 10px rgba(212, 175, 85, 0.7), 0 0 20px rgba(180, 150, 70, 0.4); }
+        .text-glow-emerald { text-shadow: 0 0 12px rgba(52, 211, 153, 0.6), 0 0 25px rgba(16, 185, 129, 0.3); }
+
+        /* Cinematic Intro */
+        #intro-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #020403;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1.5s ease-in-out;
+        }
+        #intro-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .intro-bg {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+                linear-gradient(to bottom, #020403, #050a08 40%, #020403);
+            opacity: 1;
+        }
+        .intro-particles {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='1' fill='rgba(52, 211, 153, 0.2)'/%3E%3C/svg%3E");
+            animation: drift 60s linear infinite;
+            opacity: 0.5;
+        }
+        @keyframes drift { from { background-position: 0 0; } to { background-position: 100px 100px; } }
+        
+        .intro-title {
+            font-family: 'Cinzel', serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: transparent;
+            background: linear-gradient(to bottom, #d1fae5, #10b981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(16, 185, 129, 0.2);
+            opacity: 0;
+            transform: scale(0.9);
+            animation: introReveal 2s ease-out forwards 0.5s;
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            line-height: 1.1;
+        }
+        .intro-subtitle {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.2rem;
+            color: #34d399;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: introSlideUp 1.5s ease-out forwards 1.5s;
+            margin-top: 1.5rem;
+            position: relative;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+        }
+        .intro-btn {
+            margin-top: 4rem;
+            padding: 1rem 3rem;
+            background: transparent;
+            border: 1px solid #10b981;
+            color: #10b981;
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            opacity: 0;
+            animation: introFadeIn 1s ease-out forwards 2.5s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+        .intro-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: #10b981;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: -1;
+        }
+        .intro-btn:hover {
+            color: #020403;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+            border-color: #34d399;
+        }
+        .intro-btn:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        @keyframes introReveal {
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes introSlideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes introFadeIn {
+            to { opacity: 1; }
+        }
+        .text-glow-moon { text-shadow: 0 0 10px rgba(200, 220, 240, 0.6), 0 0 20px rgba(150, 180, 200, 0.3); }
+        
+        /* Decorative Divider - Forest */
+        .divider-ornate {
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, #2d5a4a 20%, #4a9c7d 50%, #2d5a4a 80%, transparent 100%);
+            position: relative;
+        }
+        .divider-ornate::before {
+            content: '✦';
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            color: #4a9c7d;
+            font-size: 12px;
+            background: #0a100e;
+            padding: 0 8px;
+        }
+        
+        /* Custom Scrollbar - Midnight Forest */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #060a08; border-left: 1px solid #1a3a2e; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #2d5a4a, #1a3a2e); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #4a9c7d, #2d5a4a); }
+        
+        /* Floating Stars/Fireflies */
+        .mystical-bg {
+            position: relative;
+            overflow: hidden;
+        }
+        .mystical-bg::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(2px 2px at 10% 15%, rgba(200, 230, 180, 0.6), transparent),
+                radial-gradient(2px 2px at 25% 45%, rgba(150, 220, 180, 0.4), transparent),
+                radial-gradient(1px 1px at 40% 25%, rgba(180, 240, 200, 0.5), transparent),
+                radial-gradient(2px 2px at 55% 70%, rgba(160, 210, 170, 0.3), transparent),
+                radial-gradient(1px 1px at 70% 35%, rgba(200, 250, 210, 0.5), transparent),
+                radial-gradient(2px 2px at 85% 55%, rgba(140, 200, 160, 0.4), transparent),
+                radial-gradient(1px 1px at 95% 20%, rgba(180, 220, 190, 0.5), transparent),
+                radial-gradient(2px 2px at 15% 80%, rgba(120, 190, 150, 0.3), transparent);
+            pointer-events: none;
+            animation: fireflies 6s ease-in-out infinite;
+            z-index: 1;
+        }
+        @keyframes fireflies {
+            0%, 100% { opacity: 0.4; transform: translateY(0); }
+            25% { opacity: 0.8; }
+            50% { opacity: 0.5; transform: translateY(-3px); }
+            75% { opacity: 0.9; }
+        }
+
+        /* Rarity Colors - Enhanced with Nature Glows */
+        .rarity-1 { color: #a8b5a0; } 
+        .rarity-2 { color: #4ade80; text-shadow: 0 0 5px rgba(74, 222, 128, 0.3); } 
+        .rarity-3 { color: #38bdf8; text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); } 
+        .rarity-4 { color: #a78bfa; text-shadow: 0 0 10px rgba(167, 139, 250, 0.5); } 
+        .rarity-5 { color: #fcd34d; text-shadow: 0 0 15px rgba(252, 211, 77, 0.7), 0 0 30px rgba(252, 211, 77, 0.3); } 
+        .rarity-6 { color: #f87171; text-shadow: 0 0 15px rgba(248, 113, 113, 0.8), 0 0 30px rgba(248, 113, 113, 0.4); animation: legendary-pulse 2s ease-in-out infinite; }
+        
+        /* Rarity Border Styles for Bestiary */
+        .rarity-border-1 { border: 2px solid #6b7280; box-shadow: 0 0 8px rgba(107, 114, 128, 0.3); }
+        .rarity-border-2 { border: 2px solid #22c55e; box-shadow: 0 0 12px rgba(34, 197, 94, 0.4), inset 0 0 10px rgba(34, 197, 94, 0.1); }
+        .rarity-border-3 { border: 2px solid #0ea5e9; box-shadow: 0 0 15px rgba(14, 165, 233, 0.5), inset 0 0 12px rgba(14, 165, 233, 0.15); }
+        .rarity-border-4 { border: 2px solid #8b5cf6; box-shadow: 0 0 18px rgba(139, 92, 246, 0.6), inset 0 0 15px rgba(139, 92, 246, 0.2); }
+        .rarity-border-5 { border: 3px solid #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.7), 0 0 40px rgba(245, 158, 11, 0.3), inset 0 0 15px rgba(245, 158, 11, 0.2); animation: gold-shimmer 3s ease-in-out infinite; }
+        .rarity-border-6 { border: 3px solid #ef4444; box-shadow: 0 0 25px rgba(239, 68, 68, 0.8), 0 0 50px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.25); animation: mythic-pulse 2s ease-in-out infinite; }
+        
+        @keyframes gold-shimmer {
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.7), 0 0 40px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.9), 0 0 60px rgba(245, 158, 11, 0.5); }
+        }
+        
+        @keyframes mythic-pulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.8), 0 0 50px rgba(239, 68, 68, 0.4); filter: brightness(1); }
+            50% { box-shadow: 0 0 35px rgba(239, 68, 68, 1), 0 0 70px rgba(239, 68, 68, 0.6); filter: brightness(1.2); }
+        }
+        
+        /* Shiny Variant Styles */
+        .shiny-creature {
+            position: relative;
+        }
+        .shiny-creature::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(45deg, 
+                transparent 20%, rgba(255, 215, 0, 0.8) 25%, transparent 30%,
+                transparent 45%, rgba(255, 255, 255, 0.9) 50%, transparent 55%,
+                transparent 70%, rgba(255, 215, 0, 0.8) 75%, transparent 80%);
+            background-size: 200% 200%;
+            animation: shiny-sparkle 2s linear infinite;
+            border-radius: inherit;
+            z-index: -1;
+            pointer-events: none;
+        }
+        @keyframes shiny-sparkle {
+            0% { background-position: 200% 200%; }
+            100% { background-position: 0% 0%; }
+        }
+        .shiny-badge {
+            position: absolute;
+            top: 2px; right: 2px;
+            background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700);
+            color: #8b4513;
+            font-size: 8px;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 4px;
+            z-index: 20;
+            text-shadow: none;
+            animation: badge-shine 1.5s ease-in-out infinite;
+        }
+        @keyframes badge-shine {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+        
+        /* NEW Species Discovery Overlay */
+        .new-discovery-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(16, 69, 56, 0.95) 0%, rgba(5, 6, 8, 0.98) 70%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: discovery-fade-in 0.5s ease-out;
+        }
+        @keyframes discovery-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .discovery-text {
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            font-size: clamp(2rem, 8vw, 4rem);
+            color: transparent;
+            background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 25%, #f59e0b 50%, #fcd34d 75%, #fbbf24 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: gold-text-flow 2s linear infinite;
+            text-align: center;
+            letter-spacing: 0.2em;
+            text-shadow: 0 0 30px rgba(252, 211, 77, 0.5);
+        }
+        @keyframes gold-text-flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        .discovery-creature-name {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: clamp(1.5rem, 6vw, 3rem);
+            color: #d4e5dc;
+            margin-top: 1rem;
+            text-shadow: 0 0 20px rgba(74, 156, 125, 0.8);
+            animation: creature-name-glow 2s ease-in-out infinite;
+        }
+        @keyframes creature-name-glow {
+            0%, 100% { text-shadow: 0 0 20px rgba(74, 156, 125, 0.8); }
+            50% { text-shadow: 0 0 40px rgba(74, 156, 125, 1), 0 0 60px rgba(52, 211, 153, 0.5); }
+        }
+        .discovery-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid #fcd34d;
+            box-shadow: 0 0 40px rgba(252, 211, 77, 0.6), 0 0 80px rgba(245, 158, 11, 0.3);
+            margin-top: 1.5rem;
+            animation: discovery-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s both;
+            object-fit: cover;
+        }
+        @keyframes discovery-pop {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .discovery-subtitle {
+            color: #4a9c7d;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+        } 
+        
+        @keyframes legendary-pulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        /* Floating Action Button Pulse */
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        /* Stamp/Seal Effect - Forest Emerald */
+        .wax-seal {
+            width: 50px; height: 50px;
+            background: radial-gradient(circle, #166534 0%, #14532d 70%, #052e16 100%);
+            border-radius: 50%;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.5), inset 0 -2px 5px rgba(0,0,0,0.3), inset 0 2px 5px rgba(74, 222, 128, 0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+        
+        /* Journal Entry Style - Midnight Forest */
+        .journal-entry {
+            background: linear-gradient(135deg, rgba(12, 20, 16, 0.9) 0%, rgba(10, 16, 14, 0.95) 100%);
+            border-left: 3px solid;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .journal-entry:hover {
+            background: linear-gradient(135deg, rgba(20, 30, 25, 0.9) 0%, rgba(15, 22, 18, 0.95) 100%);
+            transform: translateX(2px);
+        }
+        .journal-entry::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: -3px;
+            width: 3px;
+            background: inherit;
+        }
+        
+        /* Catch Success Animation */
+        @keyframes catch-flash {
+            0% { background: rgba(52, 211, 153, 0.3); }
+            100% { background: transparent; }
+        }
+        .catch-flash {
+            animation: catch-flash 0.5s ease-out;
+        }
+        
+        /* New Entry Glow */
+        @keyframes new-entry-glow {
+            0% { box-shadow: 0 0 0 rgba(52, 211, 153, 0); }
+            50% { box-shadow: 0 0 20px rgba(52, 211, 153, 0.5); }
+            100% { box-shadow: 0 0 0 rgba(52, 211, 153, 0); }
+        }
+        .new-entry {
+            animation: new-entry-glow 1s ease-out;
+        }
+        
+        /* Hunt Button Glow Animation */
+        @keyframes hunt-ready {
+            0%, 100% { box-shadow: 0 5px 30px rgba(52, 211, 153, 0.4), inset 0 2px 10px rgba(255,255,255,0.2); }
+            50% { box-shadow: 0 5px 40px rgba(52, 211, 153, 0.6), 0 0 60px rgba(16, 185, 129, 0.3), inset 0 2px 10px rgba(255,255,255,0.2); }
+        }
+        .hunt-ready {
+            animation: hunt-ready 2s ease-in-out infinite;
+        }
+        
+        /* Time-of-Day Overlay Styles */
+        .time-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            transition: all 0.8s ease-in-out;
+            z-index: 5;
+        }
+        
+        .time-dawn .time-overlay {
+            background: linear-gradient(to top, 
+                rgba(255, 150, 80, 0.45) 0%, 
+                rgba(255, 200, 150, 0.25) 40%,
+                rgba(255, 230, 200, 0.15) 100%);
+        }
+        .time-dawn #location-bg {
+            filter: brightness(0.9) saturate(1.1) sepia(0.15);
+        }
+        
+        .time-day .time-overlay {
+            background: linear-gradient(to bottom, 
+                rgba(135, 206, 250, 0.15) 0%, 
+                rgba(255, 255, 255, 0.05) 50%,
+                transparent 100%);
+        }
+        .time-day #location-bg {
+            filter: brightness(1.05) saturate(1.1);
+        }
+        
+        .time-dusk .time-overlay {
+            background: linear-gradient(to top, 
+                rgba(255, 80, 50, 0.5) 0%, 
+                rgba(255, 150, 100, 0.35) 30%,
+                rgba(180, 100, 180, 0.3) 70%,
+                rgba(100, 80, 150, 0.25) 100%);
+        }
+        .time-dusk #location-bg {
+            filter: brightness(0.85) saturate(1.2) sepia(0.1);
+        }
+        
+        .time-night .time-overlay {
+            background: linear-gradient(to bottom, 
+                rgba(10, 15, 50, 0.75) 0%, 
+                rgba(20, 30, 70, 0.6) 50%,
+                rgba(15, 25, 55, 0.7) 100%);
+        }
+        .time-night #location-bg {
+            filter: brightness(0.5) saturate(0.7) hue-rotate(-10deg);
+        }
+        
+        /* Stars for night time */
+        .time-night .time-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 40% 10%, rgba(255,255,255,0.9), transparent),
+                radial-gradient(1px 1px at 55% 25%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 70% 45%, rgba(255,255,255,0.7), transparent),
+                radial-gradient(2px 2px at 85% 20%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 15% 55%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(2px 2px at 30% 70%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 60% 80%, rgba(255,255,255,0.4), transparent);
+            animation: twinkle 3s ease-in-out infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        /* Sun rays for dawn */
+        .time-dawn .time-overlay::before {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200%;
+            height: 80%;
+            background: radial-gradient(ellipse at center bottom, 
+                rgba(255, 200, 100, 0.4) 0%, 
+                rgba(255, 180, 80, 0.2) 30%,
+                transparent 70%);
+            pointer-events: none;
+        }
+        
+        /* Time indicator badge */
+        .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            backdrop-filter: blur(8px);
+            transition: all 0.5s ease;
+        }
+        .time-badge.dawn {
+            background: rgba(255, 180, 100, 0.3);
+            border: 1px solid rgba(255, 200, 120, 0.5);
+            color: #ffd699;
+        }
+        .time-badge.day {
+            background: rgba(135, 206, 250, 0.3);
+            border: 1px solid rgba(135, 206, 250, 0.5);
+            color: #87ceeb;
+        }
+        .time-badge.dusk {
+            background: rgba(255, 120, 80, 0.3);
+            border: 1px solid rgba(255, 150, 100, 0.5);
+            color: #ffaa80;
+        }
+        .time-badge.night {
+            background: rgba(100, 120, 200, 0.3);
+            border: 1px solid rgba(120, 140, 220, 0.5);
+            color: #a0b0ff;
+        }
+        
+        /* Camera Shake Mini-game Styles */
+        #camera-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 70;
+            background: rgba(0, 0, 0, 0.9);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #camera-overlay:not(.hidden) {
+            display: flex;
+        }
+        
+        .viewfinder {
+            position: relative;
+            width: min(300px, 80vw);
+            height: min(300px, 80vw);
+            border: 2px solid rgba(16, 185, 129, 0.6);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #0a0f0d;
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.2), inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .viewfinder-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(1) brightness(0.75) contrast(0.95);
+            transition: filter 0.5s ease, clip-path 0.3s ease;
+        }
+        
+        .viewfinder-image.revealed {
+            filter: none;
+            clip-path: none !important;
+        }
+
+        /* Vignette inside the viewfinder so the revealed circle has darker edges */
+        .viewfinder::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 10%, rgba(0,0,0,0.9) 35%, rgba(0,0,0,0.98) 100%);
+            mix-blend-mode: multiply;
+            transition: opacity 0.5s ease;
+        }
+        
+        .viewfinder.reveal-success::after {
+            opacity: 0;
+        }
+        
+        .viewfinder.reveal-success .reticle {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .reticle {
+            display: none;
+        }
+        
+        .center-zone {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px dashed rgba(52, 211, 153, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .camera-timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fcd34d;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 20;
+            filter: none !important;
+        }
+        
+        .camera-instruction {
+            color: #34d399;
+            font-size: 14px;
+            margin-top: 16px;
+            text-align: center;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        .shot-result {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            padding: 8px 20px;
+            border-radius: 8px;
+            animation: pop 0.3s ease-out;
+        }
+        .shot-result.perfect { background: #16a34a; color: white; }
+        .shot-result.good { background: #0ea5e9; color: white; }
+        .shot-result.ok { background: #f59e0b; color: white; }
+        .shot-result.blurry { background: #ef4444; color: white; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden mystical-bg">
+
+    <!-- Cinematic Intro Overlay -->
+    <div id="intro-overlay">
+        <div class="intro-bg"></div>
+        <div class="intro-particles"></div>
+        <h1 class="intro-title">SingaWild<br><span class="text-2xl block mt-2 text-emerald-500/80 font-normal tracking-widest font-serif italic">Expedition</span></h1>
+        <div class="intro-subtitle">Midnight Jungle</div>
+        <button class="intro-btn" onclick="enterGame()">Enter the Wild</button>
+    </div>
+
+    <script>
+        function enterGame() {
+            const overlay = document.getElementById('intro-overlay');
+            overlay.classList.add('fade-out');
+            
+            // Initialize Audio Context
+            if (window.app && window.app.initAudio) {
+                window.app.initAudio();
+                // Start ambient sound immediately
+                window.app.startAmbient();
+            }
+
+            setTimeout(() => {
+                overlay.remove();
+            }, 1500);
+        }
+    </script>
+
+    <!-- NEW SPECIES DISCOVERY OVERLAY -->
+    <div id="discovery-overlay" class="new-discovery-overlay hidden" onclick="app.closeDiscovery()">
+        <div class="discovery-text">NEW SPECIES</div>
+        <div id="discovery-name" class="discovery-creature-name">Creature Name</div>
+        <img id="discovery-image" class="discovery-image" src="" alt="New Discovery">
+        <div class="discovery-subtitle">Added to Bestiary</div>
+        <div class="text-emerald-400/60 text-xs mt-4 animate-pulse">Tap to continue</div>
+    </div>
+
+    <!-- TOP BAR: Stats -->
+    <header class="parchment border-b-4 border-emerald-900/50 shadow-2xl z-20 shrink-0 relative">
+        <div class="max-w-3xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center relative z-10">
+            <div class="flex items-center gap-3">
+                <!-- Logo: Fantasy Seal -->
+                <div class="wax-seal glow-emerald">
+                    <i class="fa-solid fa-paw text-emerald-100 drop-shadow"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-xl tracking-widest text-glow-emerald text-emerald-300 font-fantasy">SingaWild</h1>
+                    <div class="text-[10px] text-emerald-400/80 uppercase tracking-widest font-bold medieval-text" id="rank-display">Novice Spotter</div>
+                </div>
+            </div>
+            
+            <div class="flex gap-5 text-sm">
+                <div class="text-center px-3 py-1 rounded bg-amber-900/30 border border-amber-700/50">
+                    <div class="text-amber-500/80 text-[8px] uppercase tracking-widest font-bold"><i class="fa-solid fa-coins mr-1"></i>Gold</div>
+                    <div id="gold-display" class="text-lg font-bold text-amber-300 medieval-text">0</div>
+                </div>
+                <div class="text-center px-3 py-1 rounded bg-emerald-900/30 border border-emerald-700/50">
+                    <div class="text-emerald-400/80 text-[8px] uppercase tracking-widest font-bold"><i class="fa-solid fa-star mr-1"></i>Renown</div>
+                    <div id="points-display" class="text-lg font-bold text-emerald-300 medieval-text">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- XP Bar -->
+        <div class="h-2 bg-emerald-950 border-t border-emerald-900/30">
+            <div id="xp-bar" class="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-600 h-full transition-all duration-500 shadow-[0_0_15px_rgba(52,211,153,0.6)]" style="width: 0%"></div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto relative w-full max-w-3xl mx-auto flex flex-col bg-emerald-950/30 backdrop-blur-sm shadow-2xl border-x border-emerald-900/30 pb-24">
+        
+        <!-- LOCATION HEADER -->
+        <div id="location-header" class="relative h-36 shrink-0 overflow-hidden group border-b border-emerald-600/30 bg-emerald-950/40 time-day">
+            <div class="time-overlay"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-950/20 to-emerald-950/60 z-10"></div>
+            <img id="location-bg" src="" class="w-full h-full object-cover opacity-70 transition-transform duration-1000 group-hover:scale-105" alt="Location">
+            
+            <div class="absolute inset-0 z-20 flex flex-col justify-center items-center text-center p-4">
+                <h2 id="location-name" class="text-2xl font-bold text-white text-shadow tracking-wider mb-1 font-fantasy">Loading...</h2>
+                <div class="flex items-center gap-2 text-emerald-200/90 text-sm italic bg-emerald-950/70 px-4 py-1 rounded-full border border-emerald-500/30 backdrop-blur-sm">
+                    <i class="fa-solid fa-compass text-emerald-400 text-xs"></i> 
+                    <span id="location-desc">...</span>
+                </div>
+                <div id="time-badge" class="time-badge day mt-2">
+                    <i id="time-icon" class="fa-solid fa-sun"></i>
+                    <span id="time-name">Day</span>
+                    <span id="time-counter" class="text-[9px] opacity-70">(20 hunts)</span>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="absolute bottom-2 right-2 z-30 flex gap-2">
+                <button onclick="app.openModal('travel')" class="bg-emerald-900/90 hover:bg-emerald-800 text-emerald-100 px-3 py-1 rounded border border-emerald-500/50 text-[10px] font-bold flex items-center gap-1 transition shadow-lg backdrop-blur-md font-sans uppercase tracking-wide">
+                    <i class="fa-solid fa-map"></i> <span>Travel</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ACTIVE SETUP BAR -->
+        <div class="bg-emerald-950/60 border-b border-emerald-800/50 p-2 flex justify-between items-center text-xs px-4 shrink-0 shadow-md z-10 sticky top-0 backdrop-blur">
+            <div class="flex items-center gap-3 cursor-pointer hover:bg-emerald-900/50 p-1 rounded w-1/2 transition" onclick="app.openModal('traps')">
+                <div class="text-emerald-400 text-xl"><i class="fa-solid fa-toolbox"></i></div>
+                <div class="overflow-hidden">
+                    <div class="text-[9px] text-emerald-400 uppercase font-sans font-bold">Equipment</div>
+                    <div id="current-trap" class="font-bold text-emerald-100 truncate text-sm">...</div>
+                </div>
+            </div>
+            <div class="w-px h-6 bg-emerald-800/50 mx-2"></div>
+            <div class="flex items-center gap-3 cursor-pointer hover:bg-emerald-900/50 p-1 rounded w-1/2 justify-end text-right transition" onclick="app.openModal('bait')">
+                <div class="overflow-hidden">
+                    <div class="text-[9px] text-amber-400 uppercase font-sans font-bold">Lure <span id="bait-qty" class="text-amber-500"></span></div>
+                    <div id="current-bait" class="font-bold text-amber-200 truncate text-sm">...</div>
+                </div>
+                <div class="text-amber-500 text-xl"><i class="fa-solid fa-flask"></i></div>
+            </div>
+        </div>
+
+
+
+        <!-- TABS -->
+        <div id="tab-content" class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+            
+            <!-- TAB: JOURNAL -->
+            <div id="view-camp" class="space-y-4">
+                <div class="bg-emerald-950/50 rounded-lg border border-emerald-800/50 overflow-hidden">
+                    <div class="bg-emerald-950/70 p-2 px-3 border-b border-emerald-800/50 flex justify-between items-center">
+                        <h3 class="font-cinzel font-bold text-emerald-300 text-sm tracking-wide"><i class="fa-solid fa-scroll mr-2 text-emerald-500"></i>Adventure Log</h3>
+                        <button onclick="app.clearJournal()" class="text-[9px] text-emerald-500/50 hover:text-red-400 uppercase font-bold font-sans">Clear</button>
+                    </div>
+                    <div id="journal-container" class="p-2 space-y-1.5 max-h-[60vh] overflow-y-auto">
+                        <!-- JS populates this -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: BESTIARY -->
+            <div id="view-dex" class="hidden pb-20">
+                <div class="flex justify-between items-center mb-4 px-1">
+                    <h2 class="text-2xl font-cinzel font-bold text-emerald-200">Bestiary</h2>
+                    <span class="text-[10px] text-emerald-400 bg-emerald-900/50 px-2 py-1 rounded border border-emerald-700/50 uppercase font-bold tracking-wider">Collection</span>
+                </div>
+                
+                <!-- Grouped by Location -->
+                <div id="dex-container" class="space-y-6">
+                    <!-- JS populates groups here -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- BOTTOM NAVIGATION (HUD) -->
+    <nav class="fixed bottom-0 left-0 right-0 w-full max-w-3xl mx-auto parchment border-t-4 border-emerald-800/50 z-40 shadow-[0_-10px_30px_rgba(16,69,56,0.4)] pb-safe">
+        <div class="flex justify-between items-center h-16 px-2 relative">
+            
+            <!-- Left Nav -->
+            <div class="flex-1 flex justify-around">
+                <button onclick="app.switchTab('camp')" class="nav-btn text-emerald-400 flex flex-col items-center p-2 hover:text-emerald-300 transition group">
+                    <div class="w-10 h-10 rounded bg-emerald-900/30 border border-emerald-700/50 flex items-center justify-center group-hover:bg-emerald-800/40 transition">
+                        <i class="fa-solid fa-scroll text-lg"></i>
+                    </div>
+                    <span class="text-[8px] font-bold uppercase medieval-text tracking-wider mt-1">Journal</span>
+                </button>
+                <button onclick="app.openModal('traps')" class="nav-btn text-teal-400 flex flex-col items-center p-2 hover:text-teal-300 transition group">
+                    <div class="w-10 h-10 rounded bg-teal-900/30 border border-teal-700/50 flex items-center justify-center group-hover:bg-teal-800/40 transition">
+                        <i class="fa-solid fa-camera text-lg"></i>
+                    </div>
+                    <span class="text-[8px] font-bold uppercase medieval-text tracking-wider mt-1">Gear</span>
+                </button>
+            </div>
+
+            <!-- CENTER HUNT BUTTON -->
+            <div class="relative -top-8 mx-2">
+                <div class="absolute inset-0 bg-emerald-500 rounded-full blur-xl opacity-40 pulse-ring"></div>
+                <button id="hunt-btn" onclick="app.hunt()" 
+                    class="hunt-ready w-24 h-24 rounded-full bg-gradient-to-b from-emerald-600 via-teal-700 to-emerald-900 border-4 border-emerald-950 text-white flex flex-col items-center justify-center transform transition active:scale-95 relative z-10 group">
+                    <i class="fa-solid fa-binoculars text-3xl mb-1 drop-shadow-lg group-hover:scale-110 transition text-emerald-100"></i>
+                    <span class="text-[10px] font-bold tracking-widest medieval-text group-hover:text-white text-emerald-200">HUNT</span>
+                    
+                    <!-- Cooldown Ring -->
+                    <div id="cooldown-overlay" class="hidden absolute inset-0 rounded-full bg-black/70 backdrop-blur-sm flex items-center justify-center">
+                        <span id="cooldown-timer" class="font-bold text-2xl text-emerald-400 medieval-text">0</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Right Nav -->
+            <div class="flex-1 flex justify-around">
+                <button onclick="app.openModal('travel')" class="nav-btn text-sky-400 flex flex-col items-center p-2 hover:text-sky-300 transition group">
+                    <div class="w-10 h-10 rounded bg-sky-900/30 border border-sky-700/50 flex items-center justify-center group-hover:bg-sky-800/40 transition">
+                        <i class="fa-solid fa-map-location-dot text-lg"></i>
+                    </div>
+                    <span class="text-[8px] font-bold uppercase medieval-text tracking-wider mt-1">Travel</span>
+                </button>
+                <button onclick="app.switchTab('dex')" class="nav-btn text-amber-400 flex flex-col items-center p-2 hover:text-amber-300 transition group">
+                    <div class="w-10 h-10 rounded bg-amber-900/30 border border-amber-700/50 flex items-center justify-center group-hover:bg-amber-800/40 transition">
+                        <i class="fa-solid fa-book text-lg"></i>
+                    </div>
+                    <span class="text-[8px] font-bold uppercase medieval-text tracking-wider mt-1">Bestiary</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MODALS -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="parchment rounded-lg shadow-[0_0_50px_rgba(16,69,56,0.4)] w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden animate-pop relative glow-mystical">
+            <!-- Decorative Border Corners -->
+            <div class="absolute top-0 left-0 ornate-corner z-20"></div>
+            <div class="absolute top-0 right-0 ornate-corner tr z-20"></div>
+            <div class="absolute bottom-0 left-0 ornate-corner bl z-20"></div>
+            <div class="absolute bottom-0 right-0 ornate-corner br z-20"></div>
+
+            <div class="p-4 border-b-2 border-emerald-800/50 flex justify-between items-center bg-gradient-to-r from-emerald-950/50 via-transparent to-emerald-950/50 z-10">
+                <h3 id="modal-title" class="font-cinzel font-bold text-xl text-emerald-300 tracking-wide text-glow-emerald flex items-center gap-2">
+                    <i class="fa-solid fa-scroll text-emerald-500 text-sm"></i>
+                    <span>Title</span>
+                </h3>
+                <button onclick="app.closeModal()" class="w-8 h-8 rounded-full bg-red-900/50 border border-red-700/50 flex items-center justify-center text-red-400 hover:bg-red-800/50 hover:text-red-300 transition">
+                    <i class="fa-solid fa-times text-sm"></i>
+                </button>
+            </div>
+            <div id="modal-content" class="p-0 overflow-y-auto bg-gradient-to-b from-emerald-950/50 to-emerald-950/70 text-emerald-100 z-10">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ZOOM OVERLAY -->
+    <div id="zoom-overlay" class="fixed inset-0 bg-black/95 z-[60] hidden flex items-center justify-center p-4 cursor-pointer" onclick="this.classList.add('hidden')">
+        <img id="zoom-img" src="" class="max-w-full max-h-full rounded border-4 border-amber-600/50 shadow-[0_0_30px_rgba(217,119,6,0.3)]">
+    </div>
+    
+    <!-- CAMERA SHAKE MINI-GAME OVERLAY -->
+    <div id="camera-overlay" class="hidden">
+        <div class="text-emerald-400 text-sm mb-3 font-bold uppercase tracking-widest">📸 Wildlife Spotted!</div>
+        <div id="camera-creature-name" class="text-amber-300 text-xl font-cinzel mb-4">Creature Name</div>
+        <div class="viewfinder" id="viewfinder" onclick="app.takeShot(event)">
+            <img id="camera-creature-img" class="viewfinder-image" src="" alt="Target">
+            <div class="center-zone"></div>
+            <div id="reticle" class="reticle"></div>
+            <div id="camera-timer" class="camera-timer">5.0</div>
+            <div id="shot-result" class="shot-result hidden"></div>
+            <!-- Debug markers -->
+            <div id="debug-center" class="debug-marker" style="display: none; color: lime; font-size: 24px; font-weight: bold; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 100; pointer-events: none;">✕</div>
+            <div id="debug-click" class="debug-marker" style="display: none; color: red; font-size: 24px; font-weight: bold; position: absolute; z-index: 100; pointer-events: none; transform: translate(-50%, -50%);">✕</div>
+            <div id="debug-circle" class="debug-marker" style="display: none; color: yellow; font-size: 24px; font-weight: bold; position: absolute; z-index: 100; pointer-events: none; transform: translate(-50%, -50%);">⭘</div>
+        </div>
+        <div class="camera-instruction">TAP when the reticle is centered!</div>
+    </div>
+
+    <script>
+        // --- GAME DATA ---
+        const RANKS = [
+            { name: "Novice Spotter", xp: 0 },
+            { name: "Park Explorer", xp: 2000 },
+            { name: "Nature Ranger", xp: 8000 },
+            { name: "Wildlife Expert", xp: 25000 },
+            { name: "Conservation Legend", xp: 100000 }
+        ];
+
+        // Updated Reliable Images
+        const LOCATIONS = [
+            {
+                id: "urban",
+                name: "Urban Jungle",
+                desc: "The concrete jungle hums with hidden life. Bold creatures have carved out their own wild kingdom among the hawker centres.",
+                minRank: 0,
+                img: "https://images.unsplash.com/photo-1565967511849-76a60a516170?auto=format&fit=crop&w=800", 
+                wildlife: ["myna", "koel", "sparrow", "gecko", "straycat", "otter_urban"]
+            },
+            {
+                id: "botanic",
+                name: "Botanic Gardens",
+                desc: "Ancient trees whisper secrets in this UNESCO heritage site. The gardens hold creatures both elegant and unexpected.",
+                minRank: 1,
+                img: "https://images.unsplash.com/photo-1693653932177-905cfc6a2cf2?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+                wildlife: ["rooster", "monitor_lizard", "black_swan", "squirrel", "tortoise", "otter_smooth"]
+            },
+            {
+                id: "sungei",
+                name: "Sungei Buloh",
+                desc: "Mangrove roots twist into brackish water like gnarled fingers. This wetland sanctuary harbors patient predators.",
+                minRank: 2,
+                img: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Sungei_Buloh_Wetland_Reserve_202408_10.jpg", 
+                wildlife: ["mudskipper", "heron", "kingfisher", "crocodile", "shorebird", "viper"]
+            },
+            {
+                id: "ubin",
+                name: "Pulau Ubin",
+                desc: "Time moves slower on this rustic island. The old kampong spirit lives on alongside wild creatures.",
+                minRank: 3,
+                img: "https://upload.wikimedia.org/wikipedia/commons/b/bb/House_near_the_northern_coast_of_Pulau_Ubin%2C_Singapore_-_20050803.jpg", 
+                wildlife: ["boar", "macaque", "hornbill", "mousedeer", "junglefowl"]
+            },
+            {
+                id: "bukit",
+                name: "Bukit Timah",
+                desc: "Primary rainforest cloaks Singapore's highest hill. Here dwell the rarest creatures of the island.",
+                minRank: 4,
+                img: "https://upload.wikimedia.org/wikipedia/commons/0/03/A_hike_to_the_Bukit_Timah_Summit_%282025%29_-_img_05.jpg", 
+                wildlife: ["colugo", "drongo", "pangolin", "langur", "python"]
+            }
+        ];
+
+        const WILDLIFE = {
+            // activeTime: null = anytime, [0]=dawn, [1]=day, [2]=dusk, [3]=night
+            "myna": { name: "Javan Myna", emoji: "🐦", rarity: 1, xp: 100, gold: 50, activeTime: [1], desc: "Common scavenger found in urban centers. They are bold and opportunistic." },
+            "sparrow": { name: "Tree Sparrow", emoji: "🐤", rarity: 1, xp: 120, gold: 60, activeTime: [0,1], desc: "Small, brown birds that chirp endlessly. Often seen hopping on cafe tables." },
+            "gecko": { name: "House Gecko", emoji: "🦎", rarity: 1, xp: 150, gold: 80, activeTime: [2,3], desc: "The pale climbers of the night. Their clicking call is a familiar home sound." },
+            "koel": { name: "Asian Koel", emoji: "📢", rarity: 2, xp: 500, gold: 200, activeTime: [0,1], desc: "The loud 'UwU' bird that wakes the island. Its crimson eyes see all." },
+            "straycat": { name: "Community Cat", emoji: "😺", rarity: 2, xp: 400, gold: 150, activeTime: null, desc: "Well-fed guardians of the void deck. Respected by all residents." },
+            "otter_urban": { name: "Lost Otter", emoji: "🦦", rarity: 3, xp: 1500, gold: 800, activeTime: [0,2], desc: "A scout from the Bishan family. Navigating the concrete canals alone." },
+            "rooster": { name: "HDB Chicken", emoji: "🐓", rarity: 2, xp: 450, gold: 250, activeTime: [0,1], desc: "The wild ancestor of all chickens. Their plumage is surprisingly vibrant." },
+            "monitor_lizard": { name: "Monitor Lizard", emoji: "🐊", rarity: 2, xp: 600, gold: 300, activeTime: [1], desc: "Often mistaken for crocodiles. They lumber peacefully across paths." },
+            "squirrel": { name: "Plantain Squirrel", emoji: "🐿️", rarity: 2, xp: 550, gold: 250, activeTime: [1], desc: "Agile jumpers of the heritage trees. A flash of stripes in the canopy." },
+            "black_swan": { name: "Black Swan", emoji: "🦢", rarity: 3, xp: 1200, gold: 600, activeTime: [1,2], desc: "The elegant royalty of the Eco-Lake. Gliding with effortless grace." },
+            "tortoise": { name: "Red-eared Slider", emoji: "🐢", rarity: 2, xp: 400, gold: 200, activeTime: [1], desc: "Sun-lovers that stack on logs. They dive at the first sign of trouble." },
+            "otter_smooth": { name: "Smooth-coated Otter", emoji: "🦦", rarity: 3, xp: 2000, gold: 1000, activeTime: [0,2], desc: "A highly social and playful clan. They dominate the waterways." },
+            "mudskipper": { name: "Giant Mudskipper", emoji: "🐟", rarity: 2, xp: 700, gold: 350, activeTime: null, desc: "Fish that defy the ocean to walk. Their eyes bulge with curiosity." },
+            "heron": { name: "Grey Heron", emoji: "🦩", rarity: 3, xp: 1300, gold: 700, activeTime: [0,1,2], desc: "A statuesque hunter of the wetlands. Patience is its greatest weapon." },
+            "kingfisher": { name: "Collared Kingfisher", emoji: "💠", rarity: 3, xp: 1400, gold: 750, activeTime: [1], desc: "A brilliant turquoise flash. It strikes the water faster than sight." },
+            "shorebird": { name: "Common Sandpiper", emoji: "🐚", rarity: 3, xp: 1600, gold: 900, activeTime: [0,1,2], desc: "Winter visitors from the cold north. They probe the mud for sustenance." },
+            "viper": { name: "Wagler's Pit Viper", emoji: "🐍", rarity: 4, xp: 3000, gold: 2000, activeTime: [3], desc: "Venomous beauty wrapped in leaves. Do not mistake it for a vine." },
+            "crocodile": { name: "Estuarine Crocodile", emoji: "🐊", rarity: 5, xp: 5000, gold: 4000, activeTime: [2,3], desc: "The ancient apex predator. It watches silently from the murky water." },
+            "boar": { name: "Wild Boar", emoji: "🐗", rarity: 3, xp: 1800, gold: 800, activeTime: [2,3], desc: "Powerful forest tanks. They plow through the undergrowth with force." },
+            "macaque": { name: "Long-tailed Macaque", emoji: "🐒", rarity: 2, xp: 900, gold: 400, activeTime: [1], desc: "Intelligent and mischievous thieves. Guard your belongings closely." },
+            "hornbill": { name: "Oriental Pied Hornbill", emoji: "👺", rarity: 4, xp: 3500, gold: 2500, activeTime: [0,1], desc: "Birds with a casque of bone. Their flight sounds like a steam engine." },
+            "mousedeer": { name: "Lesser Mousedeer", emoji: "🦌", rarity: 5, xp: 6000, gold: 5000, activeTime: [2,3], desc: "A tiny, fanged hoofed legend. It vanishes into the shadows instantly." },
+            "junglefowl": { name: "Red Junglefowl", emoji: "🐔", rarity: 3, xp: 1500, gold: 600, activeTime: [0,1], desc: "Purebred natives of the deep forest. Rarer than their park cousins." },
+            "colugo": { name: "Sunda Colugo", emoji: "🦇", rarity: 4, xp: 4000, gold: 3000, activeTime: [2,3], desc: "The flying lemur that isn't a lemur. It glides silently at dusk." },
+            "drongo": { name: "Racket-tailed Drongo", emoji: "🦅", rarity: 3, xp: 2500, gold: 1500, activeTime: [1], desc: "Songbirds with distinctive racket tails. They mimic other calls perfectly." },
+            "python": { name: "Reticulated Python", emoji: "🐍", rarity: 4, xp: 4500, gold: 3500, activeTime: [3], desc: "The giant constrictor of the sewers. It grows to terrifying lengths." },
+            "langur": { name: "Raffles' Banded Langur", emoji: "🐵", rarity: 5, xp: 8000, gold: 7000, activeTime: [0,2], desc: "Critically endangered shy primates. White rings encircle their eyes." },
+            "pangolin": { name: "Sunda Pangolin", emoji: "🛡️", rarity: 6, xp: 20000, gold: 15000, activeTime: [3], desc: "The armoured recluse of the night. To see one is a true blessing." }
+        };
+
+        const TRAPS = [
+            { id: "phone", name: "Phone Cam", power: 10, luck: 2, cost: 0, img: "📱", desc: "Basic zoom." },
+            { id: "compact", name: "Bridge Camera", power: 25, luck: 5, cost: 1000, img: "📷", desc: "Better sensor." },
+            { id: "dslr", name: "Mirrorless Camera", power: 50, luck: 10, cost: 5000, img: "📸", desc: "Fast shutter." },
+            { id: "telephoto", name: "Telephoto Scope", power: 85, luck: 25, cost: 15000, img: "🔭", desc: "Eagle eye." },
+            { id: "motion", name: "Camera Trap", power: 120, luck: 50, cost: 50000, img: "📹", desc: "Perfect shot." }
+        ];
+
+        const BAITS = [
+            { id: "bread", name: "Bread", power: 0, cost: 0, qty: Infinity, desc: "Stale.", img: "🍞" },
+            { id: "fruit", name: "Berries", power: 15, cost: 50, qty: 0, desc: "Sweet.", img: "🍓" },
+            { id: "fish", name: "Sardine", power: 30, cost: 150, qty: 0, desc: "Smelly.", img: "🐟" },
+            { id: "insects", name: "Crickets", power: 50, cost: 400, qty: 0, desc: "Live bait.", img: "🦗" },
+            { id: "durian", name: "Durian", power: 100, cost: 1000, qty: 0, desc: "King fruit.", img: "🍈" }
+        ];
+
+        // Image mapping to local files
+        const IMAGE_MAP = {
+            "myna": "singawild_assets/javan_myna.png",
+            "sparrow": "singawild_assets/tree_sparrow.png",
+            "gecko": "singawild_assets/house_gecko.png",
+            "koel": "singawild_assets/asian_koel.png",
+            "straycat": "singawild_assets/community_cat.png",
+            "otter_urban": "singawild_assets/lost_otter.png",
+            "rooster": "singawild_assets/red_junglefowl.png",
+            "monitor_lizard": "singawild_assets/monitor_lizard.png",
+            "squirrel": "singawild_assets/plantain_squirrel.png",
+            "black_swan": "singawild_assets/black_swan.png",
+            "tortoise": "singawild_assets/terrapin.png",
+            "otter_smooth": "singawild_assets/smooth_otter.png",
+            "mudskipper": "singawild_assets/mudskipper.png",
+            "heron": "singawild_assets/grey_heron.png",
+            "kingfisher": "singawild_assets/kingfisher.png",
+            "shorebird": "singawild_assets/sandpiper.png",
+            "viper": "singawild_assets/pit_viper.png",
+            "crocodile": "singawild_assets/crocodile.png",
+            "boar": "singawild_assets/wild_boar.png",
+            "macaque": "singawild_assets/macaque.png",
+            "hornbill": "singawild_assets/hornbill.png",
+            "mousedeer": "singawild_assets/mousedeer.png",
+            "junglefowl": "singawild_assets/junglefowl.png",
+            "colugo": "singawild_assets/colugo.png",
+            "drongo": "singawild_assets/drongo.png",
+            "python": "singawild_assets/python.png",
+            "langur": "singawild_assets/banded_langur.png",
+            "pangolin": "singawild_assets/pangolin.png"
+        };
+
+        // --- CREATURE LORE DATA ---
+        const CREATURE_LORE = {
+            "myna": "The Hawker King. Legend has it the first Javan Myna stowed away on a merchant vessel, took one look at a hawker centre, and decided this was prime real estate. It promptly declared sovereignty over all fallen char kway teow. To this day, its descendants maintain strict territorial control over outdoor dining areas, boldly approaching any table foolish enough to leave food unguarded. Local wizards suspect they've developed a sixth sense for detecting the exact moment you look away from your chicken rice.",
+            "sparrow": "The Tiny Messenger. In the old kampong days, grandmothers would whisper secrets to these small brown birds, trusting them to carry messages to the spirit world. Whether the spirits actually received these messages remains unclear, but the sparrows certainly enjoyed the free breadcrumbs. Modern sparrows have adapted remarkably well to café culture, having learned that hopping adorably near tourists dramatically increases their crumb acquisition rate. Some scholars theorize they invented the concept of looking pitiful for food long before cats did.",
+            "gecko": "The Click-Tongue Guardian. Every Singaporean knows that familiar 'tch-tch-tch' sound echoing through HDB corridors at night. Ancient texts (your grandmother) claim these pale wall-crawlers ward off evil spirits and mosquitoes with equal enthusiasm. The gecko's ability to walk on ceilings has led some to believe they've mastered anti-gravity magic, though scientists boringly attribute this to 'van der Waals forces.' They're also responsible for approximately 73% of all screams when they unexpectedly fall from ceilings onto unsuspecting humans.",
+            "koel": "The 4AM Alarm Clock of Doom. This black-feathered menace possesses the most distinctive call in all of Singapore: an escalating 'UWUWUWU' that begins precisely when you've finally fallen asleep. Ancient scrolls describe it as 'the voice of a lovesick princess cursed to forever seek her prince at unreasonable hours.' Modern residents have less poetic descriptions. Despite numerous complaints to the Avian Noise Authority (which doesn't exist), the koel continues its dawn serenades, blissfully unaware that it's the most passively-aggressive bird in Southeast Asia.",
+            "straycat": "The Void Deck Sovereign. These well-fed felines have established a complex feudal system beneath HDB blocks, complete with territorial boundaries that humans are too oblivious to see. Legend speaks of the Great Cat Council that convenes at midnight to discuss important matters like 'that suspicious uncle who walks too fast' and 'optimal sunny spot allocation.' Community cats are believed to protect their blocks from wandering spirits, though they mostly protect it from anyone trying to eat without paying the mandatory petting tax.",
+            "otter_urban": "The Concrete River Scout. This brave explorer belongs to the legendary Bishan Clan, whose conquest of Singapore's waterways has been documented by thousands of smartphone-wielding devotees. Having somehow navigated from the canal to the CBD, this particular otter seems perpetually confused about why the fish here taste like drain water. Local historians note that otters have a better public approval rating than most politicians, largely because they're cute and haven't been involved in any scandals. Yet.",
+            "rooster": "The Kampong Alarm That Won't Quit. Long before the koel claimed the dawn, these magnificent fowl ruled the morning with iron talons. Descended from the wild junglefowl of yore, HDB chickens have stubbornly refused to acknowledge that Singapore has modernized. They crow at dawn, at noon, at 3 PM, and basically whenever they feel like reminding everyone that nature cannot be contained by urban planning. AVA officers have learned to simply accept them as permanent residents with very strong opinions about timekeeping.",
+            "monitor_lizard": "The Pedestrian Dragon. When magic began fading from the world, the great dragons faced a choice: leave for mystical realms or downsize and stay. These scaly behemoths chose the latter, trading fire-breathing for a more sustainable diet of eggs and small mammals. Measuring up to 3 meters long, they've mastered the art of casually crossing busy paths while everyone panics and takes photos. Despite their fearsome appearance, they're mostly harmless unless you're a canal rat with poor life choices.",
+            "squirrel": "The Nutty Acrobat. The Plantain Squirrel serves as official messenger between the forest spirits and the Botanic Gardens management, though the messages seem to consist entirely of complaints about insufficient nut provisions. These striped speedsters have perfected the art of looking adorably busy while doing absolutely nothing productive. Visitors often attempt to photograph them, not realizing that squirrels consider 'staying still' a form of weakness. The Gardens' lost-and-found is reportedly full of hats blown off while chasing these fluffy demons.",
+            "black_swan": "The Accidental Royalty. In a bureaucratic mix-up that nobody can quite explain, several black swans were imported to the Botanic Gardens and simply... stayed. Now they glide across the lake with the air of aristocrats who've forgotten they weren't always in charge. Local ducks have accepted their new overlords with minimal grumbling, mostly because swans are surprisingly aggressive when annoyed. Visitors are advised to admire them from a respectful distance, as these elegant birds have zero patience for selfie-seekers invading their personal space.",
+            "tortoise": "The Eternal Sunbather. Temple elders claim these red-eared sliders carry the wisdom of a hundred generations on their shells. What the elders don't mention is that this wisdom apparently consists of 'find sunny spot' and 'stack on friends for better sun access.' Released by well-meaning but misguided pet owners, they've formed thriving colonies in every pond, reservoir, and moderately large puddle in Singapore. Their ability to sense approaching humans and immediately dive underwater suggests they've achieved enlightenment about avoiding social interaction.",
+            "otter_smooth": "The River Baron. The smooth-coated otter clans have transformed from endangered oddities to Singapore's most beloved celebrities. They've conquered Marina Bay, claimed the Kallang River, and are reportedly eyeing expansion into Sentosa. Each family operates like a small furry corporation, complete with territorial disputes, hostile takeovers of fishing spots, and extremely photogenic PR moments. Scientists study their social dynamics; everyone else just posts videos of them holding hands while sleeping. The otters are aware of their fame and have adjusted their cuteness output accordingly.",
+            "mudskipper": "The Confused Fish. In a bold evolutionary gamble, the mudskipper decided that water was overrated and learned to walk on land. This fish-that-isn't-quite-a-fish spends its days flopping dramatically across mudflats, looking perpetually surprised by its own life choices. Their bulging eyes can see in almost every direction, which is useful for spotting predators and deeply unsettling for everyone else. Mangrove guides love pointing them out to tourists, who inevitably ask 'but WHY would a fish do that?' The mudskipper offers no answers, only judgmental stares.",
+            "heron": "The Patient Assassin. Standing motionless for hours like a feathered statue, the Grey Heron has elevated patience to an art form. Local fishermen both respect and resent this competitor, who somehow always finds the good spots first. Ancient texts describe them as 'disciples of stillness who have transcended the need for movement, except when stabbing fish.' Their hunting technique involves standing very still, then suddenly becoming a blur of violence. Yoga instructors cite them as inspiration; the herons remain unimpressed by this honor.",
+            "kingfisher": "The Azure Assassin. This bird appears to have stolen a piece of the tropical sky and refuses to give it back. The Collared Kingfisher's brilliant blue plumage is so vivid that medieval scholars believed they were fragments of a shattered rainbow given life. In reality, they're extremely efficient fish murderers who've perfected the art of the diving strike. Birdwatchers spend hours trying to photograph them in flight, not realizing that kingfishers find this attention both flattering and slightly creepy.",
+            "shorebird": "The Frequent Flyer. Each year, these small champions complete an 8,000-kilometer journey from Siberia to Singapore, making your complaints about long-haul flights seem rather pathetic. They arrive exhausted, hungry, and immediately set about probing the mud for tiny crustaceans with the desperation of someone who hasn't eaten airline food in weeks. The Common Sandpiper's navigation abilities remain a mystery—they have no GPS, no maps, just an inexplicable urge to be somewhere warmer. Scientists suspect they're simply very committed to avoiding winter.",
+            "viper": "The Forbidden Noodle. Draped among leaves like a deadly Christmas ornament, Wagler's Pit Viper is nature's way of reminding hikers to watch where they're grabbing. Its beautiful jade-green scales hide heat-sensing pits that can detect warm-blooded prey in complete darkness, which is absolutely terrifying if you think about it. Despite its potent venom, this snake is generally docile unless provoked, stepped on, or disturbed during its afternoon nap. Local guides recommend the universal anti-viper strategy: look before you touch anything that looks like a vine but angrier.",
+            "crocodile": "The Living Fossil With Attitude. The Estuarine Crocodile has been doing its thing since dinosaurs roamed the earth, and it sees absolutely no reason to change now. Growing up to 6 meters long, these apex predators patrol Sungei Buloh's waters with the casual confidence of someone who has never been anyone's prey. Warning signs dot the wetlands, though the crocodiles can't read them and wouldn't care if they could. Rangers advise maintaining a respectful distance, which in crocodile terms means 'a different postal code.'",
+            "boar": "The Unkillable Garden Destroyer. Wild boars approach life with the philosophy that anything not bolted down is probably edible, and anything bolted down is worth investigating. These barrel-shaped tanks of muscle and tusks have survived every attempt to relocate them, developing what scientists call 'urban adaptation' and residents call 'the reason my garden looks like a warzone.' They travel in family groups called sounders, which is appropriate because you'll definitely hear them rooting through your bins at 3 AM. Attempts at peaceful coexistence continue with mixed results.",
+            "macaque": "The Professional Thief. Long-tailed Macaques have spent centuries perfecting the art of looking innocent while plotting larceny. They've learned to unzip bags, open bottles, and operate camera equipment, skills they use exclusively for evil. Park signs warning visitors to hide food are largely ignored, which the macaques consider a form of consent. Their complex social hierarchy includes ranks like 'First Dibs on Tourist Snacks' and 'Gets to Slap Newcomers.' Researchers studying their intelligence have concluded they're smart enough to be jerks on purpose.",
+            "hornbill": "The Flying Kazoo. When the Oriental Pied Hornbill takes flight, it sounds less like a majestic bird and more like a steam engine having an asthma attack. Their massive casque (the helmet-like growth on their beak) serves no known purpose except looking absolutely ridiculous and possibly intimidating smaller birds through sheer absurdity. Once nearly extinct in Singapore, they've made a remarkable comeback, largely by being too weird-looking for anyone to want to hunt. Their courtship involves the male sealing the female inside a tree hole, which somehow works for them.",
+            "mousedeer": "The Ankle-Height Legend. Standing barely 30cm tall, the Lesser Mousedeer is so small, elusive, and adorable that many doubt its existence entirely. Local folklore portrays it as a clever trickster who outsmarts larger animals through wit and agility—basically the underdog hero of every forest story. In reality, they're extremely skittish vegetarians who would very much like everyone to leave them alone, please. Spotting one is considered extraordinary luck, or evidence that you've been standing very still in the forest for an unhealthy amount of time.",
+            "junglefowl": "The Original Recipe. Before KFC, before chicken rice, before the egg-or-chicken debate, there was the Red Junglefowl—the wild ancestor of every domestic chicken on Earth. These proud birds strut through Ubin's forests with the swagger of creatures who know their descendants conquered the world's dinner tables. Unlike their domesticated cousins, they can actually fly, a skill they deploy mainly to escape into trees and look down judgmentally at flightless poultry. They're essentially the aristocratic relatives your backyard chickens don't talk about.",
+            "colugo": "The Gliding Mistake. The Sunda Colugo is not a lemur, not a bat, and frankly not sure what it is either. This membrane-wrapped mystery mammal glides between trees at dusk, looking like someone threw a furry blanket off a building. Scientists classify it as a 'flying lemur' despite it being neither flying nor a lemur—a naming convention that suggests early taxonomists had a sense of humor. It spends days hanging motionless from branches, which is either energy conservation or an existential crisis. Nobody's entirely sure.",
+            "drongo": "The Master Impersonator. The Greater Racket-tailed Drongo has learned to mimic over 40 different bird calls, which it uses primarily for deception, theft, and general chaos. Its signature move involves crying 'hawk!' to scare other birds away from food, then stealing said food while everyone panics. The distinctive racket-shaped tail feathers serve no practical purpose but look extremely fancy, which may be the point. Forest guides describe them as 'that one friend who's fun but you can't trust around your lunch.' They've earned this reputation honestly.",
+            "python": "The Extremely Long Boi. Singapore's Reticulated Pythons hold the world record for longest snake, with some specimens exceeding 7 meters. They've adapted remarkably well to urban life, setting up residence in drains, parks, and occasionally someone's toilet—a scenario that has ruined many a peaceful morning routine. Despite their terrifying reputation, they're non-venomous and generally avoid humans, preferring a diet of rats, cats, and the occasional overconfident monitor lizard. The python removal hotline stays busy, mostly with calls from people who've discovered why you should always check before sitting down.",
+            "langur": "The Sad-Eyed Elder. Raffles' Banded Langur gazes upon the world with an expression of profound melancholy, as if contemplating the inevitable heat death of the universe. With fewer than 70 individuals remaining in Singapore, they're critically endangered and extremely camera-shy. Their distinctive white eye-rings give them a permanently surprised look, which is appropriate given how startling it must be to find your forest keeps shrinking. Conservation efforts continue, hampered slightly by the langurs' insistence on being impossible to find. They've mastered hiding as a survival strategy and a lifestyle.",
+            "pangolin": "The Armoured Introvert. The Sunda Pangolin is nature's answer to the question 'what if anxiety was a survival strategy?' Covered in keratin scales and capable of rolling into an impenetrable ball, it responds to all threats by becoming a very defensive pine cone. Despite being the world's most trafficked mammal, Singapore's population persists through sheer determination to be left alone. Spotting one is considered the ultimate achievement for wildlife watchers, partly because they're rare and partly because they only emerge at night to eat ants while avoiding all social interaction. Relatable, honestly."
+        };
+
+        // --- APP LOGIC ---
+        const app = {
+            state: {
+                gold: 0,
+                xp: 0,
+                rankIndex: 0,
+                locationId: "urban",
+                trapId: "phone",
+                baitId: "bread",
+                ownedTraps: ["phone"], 
+                inventory: { "bread": Infinity },
+                pokedex: [],
+                pokedexImages: { ...IMAGE_MAP },
+                pokedexLore: {},
+                journal: [],
+                lastHuntTime: 0,
+                timeOfDay: 1,  // 0=Dawn, 1=Day, 2=Dusk, 3=Night
+                huntsSinceTimeChange: 0
+            },
+            
+            // Time-of-day configuration
+            TIME_CONFIG: [
+                { id: 0, name: 'Dawn', icon: 'fa-sun', iconClass: 'fa-solid', duration: 5, cssClass: 'dawn' },
+                { id: 1, name: 'Day', icon: 'fa-sun', iconClass: 'fa-solid', duration: 20, cssClass: 'day' },
+                { id: 2, name: 'Dusk', icon: 'fa-cloud-sun', iconClass: 'fa-solid', duration: 5, cssClass: 'dusk' },
+                { id: 3, name: 'Night', icon: 'fa-moon', iconClass: 'fa-solid', duration: 20, cssClass: 'night' }
+            ],
+
+            init: function() {
+                this.loadState();
+                this.renderAll();
+                this.checkRankUp(true); 
+                setInterval(() => this.saveState(), 10000);
+            },
+
+            loadState: function() {
+                const saved = localStorage.getItem('singawild_save_v7'); // V7
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        this.state = { ...this.state, ...parsed };
+                        this.state.inventory["bread"] = Infinity;
+                        if (!this.state.ownedTraps) this.state.ownedTraps = ["phone"];
+                        if (!this.state.ownedTraps.includes(this.state.trapId)) this.state.ownedTraps.push(this.state.trapId);
+                        if (!this.state.pokedexLore) this.state.pokedexLore = {};
+                    } catch(e) { console.error("Save load error", e); }
+                }
+                this.state.pokedexImages = { ...IMAGE_MAP, ...(this.state.pokedexImages || {}) };
+            },
+
+            saveState: function() {
+                const toSave = { ...this.state };
+                toSave.inventory["bread"] = "Infinity";
+                try {
+                    localStorage.setItem('singawild_save_v7', JSON.stringify(toSave));
+                } catch (e) { console.warn("Storage full?"); }
+            },
+
+            hunt: function() {
+                const now = Date.now();
+                if (now - this.state.lastHuntTime < 1000) return;
+                
+                // Block hunting while camera minigame is active
+                if (this.cameraState.animal !== null) return;
+
+                this.state.lastHuntTime = now;
+                this.startCooldownUI();
+                
+                // Advance time-of-day cycle
+                this.advanceTime();
+
+                const baitId = this.state.baitId;
+                if (this.state.inventory[baitId] <= 0 && baitId !== 'bread') {
+                    this.log("Bait empty! Used Bread.", "fail");
+                    this.state.baitId = "bread";
+                    this.renderActiveSetup();
+                }
+                if (this.state.baitId !== 'bread') {
+                    this.state.inventory[this.state.baitId]--;
+                }
+
+                const trap = TRAPS.find(t => t.id === this.state.trapId);
+                const bait = BAITS.find(b => b.id === this.state.baitId);
+                const totalPower = trap.power + bait.power;
+                const totalLuck = trap.luck;
+
+                const roll = Math.random();
+                if (roll > 0.85 + (totalLuck * 0.005)) {
+                    this.log("Nothing found.", "fail");
+                    this.renderAll();
+                    this.saveState();
+                    return;
+                }
+
+                const loc = LOCATIONS.find(l => l.id === this.state.locationId);
+                const candidates = loc.wildlife.map(id => ({ id, ...WILDLIFE[id] }));
+                const currentTime = this.state.timeOfDay;
+                let pool = [];
+                candidates.forEach(c => {
+                    let weight = Math.floor(50 / c.rarity); 
+                    if (bait.power > 20 && c.rarity >= 3) weight += 5;
+                    if (bait.id === 'durian' && c.rarity >= 4) weight += 15;
+                    
+                    // Time-of-day modifier: active creatures get 3x, inactive get 0.3x
+                    if (c.activeTime !== null) {
+                        if (c.activeTime.includes(currentTime)) {
+                            weight = Math.floor(weight * 3);
+                        } else {
+                            weight = Math.max(1, Math.floor(weight * 0.3));
+                        }
+                    }
+                    
+                    for(let i=0; i<weight; i++) pool.push(c);
+                });
+
+                const animal = pool[Math.floor(Math.random() * pool.length)];
+                const dexId = animal.id;
+                const difficulty = animal.rarity * 10; 
+                let baseCatchChance = 0.25 + (totalPower / (difficulty * 2)); 
+                if (Math.random() < (totalLuck * 0.01)) baseCatchChance = 2.0; 
+                
+                // For rarity 2+ creatures, trigger the camera mini-game
+                if (animal.rarity >= 2) {
+                    this.startCameraMinigame(animal, dexId, baseCatchChance, totalPower);
+                } else {
+                    // Direct catch for common creatures
+                    if (Math.random() < baseCatchChance) {
+                        this.successCatch(animal, dexId);
+                    } else {
+                        this.log(`${animal.name} fled!`, "fail", dexId);
+                        this.playSound('fail');
+                    }
+                }
+
+                this.saveState();
+                this.renderAll();
+            },
+            
+            // Camera shake mini-game state
+            cameraState: {
+                animal: null,
+                dexId: null,
+                baseCatchChance: 0,
+                totalPower: 0,
+                animationId: null,
+                timeLeft: 7.0,
+                timerInterval: null,
+                reticleX: 50,
+                reticleY: 50,
+                phase: 0,
+                speed: 1
+            },
+            
+            startCameraMinigame: function(animal, dexId, baseCatchChance, totalPower) {
+                const overlay = document.getElementById('camera-overlay');
+                const reticle = document.getElementById('reticle');
+                const timer = document.getElementById('camera-timer');
+                const resultEl = document.getElementById('shot-result');
+                const nameEl = document.getElementById('camera-creature-name');
+                const imgEl = document.getElementById('camera-creature-img');
+                
+                // Set up creature info
+                nameEl.textContent = animal.name;
+                const imgUrl = IMAGE_MAP[dexId];
+                if (imgUrl) {
+                    imgEl.src = imgUrl;
+                } else {
+                    // Fallback to emoji placeholder
+                    imgEl.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%230a0f0d" width="100" height="100"/><text y="60" x="25" font-size="50">${encodeURIComponent(animal.emoji)}</text></svg>`;
+                }
+                
+                // Store state
+                this.cameraState.animal = animal;
+                this.cameraState.dexId = dexId;
+                this.cameraState.baseCatchChance = baseCatchChance;
+                this.cameraState.totalPower = totalPower;
+                this.cameraState.timeLeft = 5.0;
+                this.cameraState.phase = Math.random() * Math.PI * 2;
+                this.cameraState.speed = 0.8 + (animal.rarity * 0.3); // Faster movement
+                
+                // Reset UI
+                resultEl.classList.add('hidden');
+                overlay.classList.remove('hidden');
+                
+                // Start reticle animation
+                this.animateReticle();
+                
+                // Start countdown timer
+                this.cameraState.timerInterval = setInterval(() => {
+                    this.cameraState.timeLeft -= 0.1;
+                    timer.textContent = this.cameraState.timeLeft.toFixed(1);
+                    
+                    if (this.cameraState.timeLeft <= 0) {
+                        this.endCameraMinigame(0.5, 'MISSED!');
+                    }
+                }, 100);
+            },
+            
+            animateReticle: function() {
+                const viewfinder = document.getElementById('viewfinder');
+                
+                const animate = () => {
+                    // Check if animation was cancelled
+                    if (this.cameraState.animationId === null) return;
+                    
+                    const t = Date.now() / 1000;
+                    const speed = this.cameraState.speed;
+                    
+                    // Lissajous curve for smooth, somewhat predictable movement
+                    const x = 50 + 35 * Math.sin(t * speed * 1.3 + this.cameraState.phase);
+                    const y = 50 + 35 * Math.cos(t * speed * 0.9 + this.cameraState.phase * 0.7);
+                    
+                    // Store position for click detection
+                    this.cameraState.reticleX = x;
+                    this.cameraState.reticleY = y;
+
+                    // Update viewfinder image clip to reveal a circular area
+                    const imgEl = document.getElementById('camera-creature-img');
+                    const r = 30; // 30px radius circle
+                    imgEl.style.clipPath = `circle(${r}px at ${x}% ${y}%)`;
+                    imgEl.style.webkitClipPath = `circle(${r}px at ${x}% ${y}%)`;
+
+                    this.cameraState.animationId = requestAnimationFrame(animate);
+                };
+                
+                this.cameraState.animationId = requestAnimationFrame(animate);
+            },
+            
+            takeShot: function(event) {
+                if (!this.cameraState.animal) return;
+                
+                // CAPTURE POSITION IMMEDIATELY before anything else can update it
+                const frozenX = this.cameraState.reticleX;
+                const frozenY = this.cameraState.reticleY;
+                
+                // STOP ANIMATION IMMEDIATELY to freeze the circle position
+                cancelAnimationFrame(this.cameraState.animationId);
+                clearInterval(this.cameraState.timerInterval);
+                
+                // Prevent any further animation updates
+                this.cameraState.animationId = null;
+                
+                // Get actual click position
+                const viewfinder = document.getElementById('viewfinder');
+                const rect = viewfinder.getBoundingClientRect();
+                const clickX = ((event.clientX - rect.left) / rect.width) * 100;
+                const clickY = ((event.clientY - rect.top) / rect.height) * 100;
+                
+                // Calculate distance from center (50, 50) using the FROZEN circle position
+                const dx = frozenX - 50;
+                const dy = frozenY - 50;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Debug output - compare click position vs circle position
+                console.log(`Click at: (${clickX.toFixed(1)}, ${clickY.toFixed(1)})`);
+                console.log(`Circle at: (${frozenX.toFixed(1)}, ${frozenY.toFixed(1)})`);
+                console.log(`Distance from center: ${distance.toFixed(1)}`);
+                
+                // Show debug markers
+                const debugCenter = document.getElementById('debug-center');
+                const debugClick = document.getElementById('debug-click');
+                debugCenter.style.display = 'block';
+                debugClick.style.display = 'block';
+                debugClick.style.left = `${clickX}%`;
+                debugClick.style.top = `${clickY}%`;
+                
+                // Add a yellow X to show where the circle actually was
+                const debugCircle = document.getElementById('debug-circle');
+                if (debugCircle) {
+                    debugCircle.style.display = 'block';
+                    debugCircle.style.left = `${frozenX}%`;
+                    debugCircle.style.top = `${frozenY}%`;
+                }
+                
+                // Distance ranges: 0-10 = perfect, 10-25 = good, 25-40 = ok, 40+ = blurry
+                let multiplier, resultText, resultClass;
+                if (distance <= 10) {
+                    multiplier = 2.0;
+                    resultText = `PERFECT! (${distance.toFixed(1)})`;
+                    resultClass = 'perfect';
+                } else if (distance <= 25) {
+                    multiplier = 1.2;
+                    resultText = `GOOD! (${distance.toFixed(1)})`;
+                    resultClass = 'good';
+                } else if (distance <= 40) {
+                    multiplier = 0.7;
+                    resultText = `OK (${distance.toFixed(1)})`;
+                    resultClass = 'ok';
+                } else {
+                    multiplier = 0.25;
+                    resultText = `BLURRY... (${distance.toFixed(1)})`;
+                    resultClass = 'blurry';
+                }
+                
+                this.endCameraMinigame(multiplier, resultText, resultClass);
+            },
+            
+            endCameraMinigame: function(multiplier, resultText, resultClass = 'blurry') {
+                // Animation already stopped in takeShot()
+                
+                // Show result
+                const resultEl = document.getElementById('shot-result');
+                resultEl.textContent = resultText;
+                resultEl.className = `shot-result ${resultClass}`;
+                resultEl.classList.remove('hidden');
+                
+                const animal = this.cameraState.animal;
+                const dexId = this.cameraState.dexId;
+                const finalCatchChance = this.cameraState.baseCatchChance * multiplier;
+                
+                // Determine if catch is successful
+                let isCaught = false;
+                if (multiplier <= 0.5) {
+                    // MISSED - always fails
+                    isCaught = false;
+                } else {
+                    // Roll for catch with multiplier affecting chance
+                    isCaught = Math.random() < finalCatchChance;
+                }
+                
+                const imgEl = document.getElementById('camera-creature-img');
+                const viewfinder = document.getElementById('viewfinder');
+                
+                if (isCaught) {
+                    // Reveal full color image with fade
+                    imgEl.classList.add('revealed');
+                    viewfinder.classList.add('reveal-success');
+                    
+                    // Wait 1.2 seconds showing the full image, then close and register catch
+                    setTimeout(() => {
+                        this.closeMinigameAndResolve(animal, dexId, true, resultText);
+                    }, 1200);
+                } else {
+                    // Failed - close after short delay
+                    setTimeout(() => {
+                        this.closeMinigameAndResolve(animal, dexId, false, resultText);
+                    }, 800);
+                }
+            },
+            
+            closeMinigameAndResolve: function(animal, dexId, isCaught, resultText) {
+                const imgEl = document.getElementById('camera-creature-img');
+                const viewfinder = document.getElementById('viewfinder');
+                
+                // Hide debug markers
+                document.getElementById('debug-center').style.display = 'none';
+                document.getElementById('debug-click').style.display = 'none';
+                const debugCircle = document.getElementById('debug-circle');
+                if (debugCircle) debugCircle.style.display = 'none';
+                
+                // Reset image state
+                imgEl.classList.remove('revealed');
+                viewfinder.classList.remove('reveal-success');
+                imgEl.style.clipPath = 'none';
+                imgEl.style.webkitClipPath = 'none';
+                
+                // Hide overlay
+                document.getElementById('camera-overlay').classList.add('hidden');
+                
+                // Resolve catch
+                if (isCaught) {
+                    this.successCatch(animal, dexId);
+                } else {
+                    this.log(`${animal.name} fled! (${resultText})`, "fail", dexId);
+                    this.playSound('fail');
+                }
+                
+                // Clear state
+                this.cameraState.animal = null;
+                this.cameraState.dexId = null;
+                
+                this.saveState();
+                this.renderAll();
+            },
+
+            successCatch: function(animal, dexId) {
+                // If dexId not provided, find it (for backwards compatibility)
+                if (!dexId) {
+                    dexId = Object.keys(WILDLIFE).find(key => WILDLIFE[key] === animal);
+                }
+                
+                // Shiny chance: 1 in 100 (1%)
+                const isShiny = Math.random() < 0.01;
+                
+                // Initialize shinyCollection if needed
+                if (!this.state.shinyCollection) this.state.shinyCollection = [];
+                
+                const bonusGold = Math.floor(Math.random() * (animal.gold * 0.2));
+                let finalGold = animal.gold + bonusGold;
+                let xpGain = animal.xp;
+                
+                // Shiny bonus: 3x rewards
+                if (isShiny) {
+                    finalGold *= 3;
+                    xpGain *= 3;
+                    if (!this.state.shinyCollection.includes(dexId)) {
+                        this.state.shinyCollection.push(dexId);
+                    }
+                }
+                
+                this.state.gold += finalGold;
+                this.state.xp += xpGain;
+
+                const isNew = !this.state.pokedex.includes(dexId);
+                
+                if (isNew) {
+                    this.state.pokedex.push(dexId);
+                    this.state.xp += 500;
+                    // Show discovery overlay
+                    this.showDiscovery(animal, dexId);
+                    this.log(`NEW! ${animal.name}${isShiny ? ' ✨SHINY!' : ''}`, "legendary", dexId);
+                } else if (isShiny) {
+                    this.log(`✨ SHINY ${animal.name}! (+${finalGold}g)`, "legendary", dexId);
+                    this.playSound('shiny');
+                } else {
+                    this.log(`Caught ${animal.name} (+${finalGold}g)`, "normal", dexId);
+                    this.playSound('catch');
+                }
+
+                this.checkRankUp();
+            },
+
+            checkRankUp: function(silent = false) {
+                let leveledUp = false;
+                while (true) {
+                    const nextRank = RANKS[this.state.rankIndex + 1];
+                    if (nextRank && this.state.xp >= nextRank.xp) {
+                        this.state.rankIndex++;
+                        leveledUp = true;
+                    } else {
+                        break;
+                    }
+                }
+
+                if (leveledUp) {
+                    this.renderAll(); 
+                    this.saveState();
+                    if (!silent) {
+                        setTimeout(() => {
+                            alert(`RANK UP!\nPromoted to ${RANKS[this.state.rankIndex].name}`);
+                        }, 100);
+                    }
+                }
+            },
+
+            // --- RENDERERS ---
+            renderAll: function() {
+                this.renderHeader();
+                this.renderLocation();
+                this.renderTime();
+                this.renderActiveSetup();
+                this.renderJournal();
+                this.renderDex();
+            },
+
+            renderHeader: function() {
+                document.getElementById('gold-display').innerText = this.state.gold.toLocaleString();
+                document.getElementById('points-display').innerText = this.state.xp.toLocaleString();
+                document.getElementById('rank-display').innerText = RANKS[this.state.rankIndex].name;
+                const next = RANKS[this.state.rankIndex + 1];
+                const current = RANKS[this.state.rankIndex];
+                let pct = 100;
+                if (next) pct = ((this.state.xp - current.xp) / (next.xp - current.xp)) * 100;
+                document.getElementById('xp-bar').style.width = `${Math.max(0, Math.min(100, pct))}%`;
+            },
+
+            renderLocation: function() {
+                const loc = LOCATIONS.find(l => l.id === this.state.locationId);
+                document.getElementById('location-name').innerText = loc.name;
+                document.getElementById('location-desc').innerText = loc.desc;
+                
+                const img = document.getElementById('location-bg');
+                if (img.src !== loc.img) img.src = loc.img;
+            },
+            
+            advanceTime: function() {
+                this.state.huntsSinceTimeChange++;
+                const currentTime = this.TIME_CONFIG[this.state.timeOfDay];
+                
+                if (this.state.huntsSinceTimeChange >= currentTime.duration) {
+                    this.state.huntsSinceTimeChange = 0;
+                    this.state.timeOfDay = (this.state.timeOfDay + 1) % 4;
+                    
+                    const newTime = this.TIME_CONFIG[this.state.timeOfDay];
+                    const timeEmojis = ['🌅', '☀️', '🌆', '🌙'];
+                    this.log(`${timeEmojis[this.state.timeOfDay]} ${newTime.name} arrives...`, 'legendary');
+                    this.renderTime();
+                } else {
+                    this.renderTimeCounter();
+                }
+            },
+            
+            renderTime: function() {
+                const timeConfig = this.TIME_CONFIG[this.state.timeOfDay];
+                const huntsLeft = timeConfig.duration - this.state.huntsSinceTimeChange;
+                
+                // Update location header class
+                const header = document.getElementById('location-header');
+                header.className = header.className.replace(/time-\w+/g, '');
+                header.classList.add(`time-${timeConfig.cssClass}`);
+                
+                // Update badge
+                const badge = document.getElementById('time-badge');
+                badge.className = `time-badge ${timeConfig.cssClass}`;
+                
+                document.getElementById('time-icon').className = `${timeConfig.iconClass} ${timeConfig.icon}`;
+                document.getElementById('time-name').textContent = timeConfig.name;
+                document.getElementById('time-counter').textContent = `(${huntsLeft} hunts)`;
+            },
+            
+            renderTimeCounter: function() {
+                const timeConfig = this.TIME_CONFIG[this.state.timeOfDay];
+                const huntsLeft = timeConfig.duration - this.state.huntsSinceTimeChange;
+                document.getElementById('time-counter').textContent = `(${huntsLeft} hunts)`;
+            },
+
+            renderActiveSetup: function() {
+                const trap = TRAPS.find(t => t.id === this.state.trapId);
+                const bait = BAITS.find(b => b.id === this.state.baitId);
+                document.getElementById('current-trap').innerText = trap.name;
+                document.getElementById('current-bait').innerText = bait.name;
+                const qty = this.state.inventory[bait.id] === Infinity ? "∞" : this.state.inventory[bait.id] || 0;
+                document.getElementById('bait-qty').innerText = `(${qty})`;
+            },
+
+            renderJournal: function() {
+                const con = document.getElementById('journal-container');
+                con.innerHTML = "";
+                if (this.state.journal.length === 0) {
+                    con.innerHTML = `<div class="text-center text-emerald-400/50 text-xs py-4 italic">Your adventure awaits...</div>`;
+                    return;
+                }
+                this.state.journal.forEach((entry, idx) => {
+                    let border = "border-emerald-700/50";
+                    let bg = "bg-emerald-900/10";
+                    let glow = "";
+                    if (entry.type === 'fail') { border = "border-red-500/50"; bg = "bg-red-900/10"; }
+                    if (entry.type === 'legendary') { border = "border-amber-500"; bg = "bg-amber-900/20"; glow = "glow-mystical"; }
+                    if (entry.type === 'normal' && entry.wildlifeId) { border = "border-emerald-500/50"; bg = "bg-emerald-900/15"; }
+
+                    const div = document.createElement('div');
+                    const isClickable = entry.wildlifeId && this.state.pokedex.includes(entry.wildlifeId);
+                    
+                    div.className = `journal-entry p-2 rounded text-xs text-emerald-100 flex gap-2 items-center border-l-2 ${border} ${bg} ${glow} ${idx === 0 ? 'new-entry' : ''} ${isClickable ? 'cursor-pointer hover:bg-emerald-800/20' : ''}`;
+                    
+                    if (isClickable) {
+                        div.onclick = () => app.openAnimalDetail(entry.wildlifeId);
+                    }
+                    
+                    // Thumbnail
+                    let thumbnail = '';
+                    if (entry.wildlifeId) {
+                        const animal = WILDLIFE[entry.wildlifeId];
+                        const imgUrl = IMAGE_MAP[entry.wildlifeId];
+                        if (imgUrl) {
+                            thumbnail = `<div class="w-8 h-8 rounded overflow-hidden border border-emerald-600/30 shrink-0 bg-emerald-900/30">
+                                <img src="${imgUrl}" class="w-full h-full object-cover">
+                            </div>`;
+                        } else if (animal) {
+                            thumbnail = `<div class="w-8 h-8 rounded flex items-center justify-center border border-emerald-600/30 shrink-0 bg-emerald-900/30 text-lg">${animal.emoji}</div>`;
+                        }
+                    } else if (entry.type === 'fail') {
+                        thumbnail = `<div class="w-8 h-8 rounded flex items-center justify-center border border-red-600/30 shrink-0 bg-red-900/20 text-sm text-red-400"><i class="fa-solid fa-xmark"></i></div>`;
+                    }
+                    
+                    div.innerHTML = `
+                        ${thumbnail}
+                        <div class="flex-1 leading-tight">
+                            <div class="${entry.type === 'legendary' ? 'text-amber-300 font-bold' : 'text-emerald-100'}">${entry.text}</div>
+                            <div class="text-[9px] text-emerald-400/50 mt-0.5">${entry.time}</div>
+                        </div>
+                        ${isClickable ? '<i class="fa-solid fa-chevron-right text-emerald-500/30 text-xs"></i>' : ''}
+                    `;
+                    con.appendChild(div);
+                });
+            },
+
+            renderDex: function() {
+                const container = document.getElementById('dex-container');
+                container.innerHTML = "";
+                
+                // Calculate catch rates
+                const getCatchRate = (rarity) => {
+                    const rates = { 1: '~85%', 2: '~65%', 3: '~45%', 4: '~25%', 5: '~12%', 6: '~5%' };
+                    return rates[rarity] || '??%';
+                };
+                
+                // Group by Location
+                LOCATIONS.forEach(loc => {
+                    const section = document.createElement('div');
+                    section.className = "bg-emerald-950/30 rounded-lg border border-emerald-800/50 p-3";
+                    
+                    // Header
+                    section.innerHTML = `<h3 class="text-emerald-300 font-cinzel font-bold text-sm mb-3 border-b border-emerald-800/50 pb-1">${loc.name}</h3>`;
+                    
+                    const grid = document.createElement('div');
+                    grid.className = "grid grid-cols-3 sm:grid-cols-4 gap-3";
+                    
+                    loc.wildlife.forEach(key => {
+                        const animal = WILDLIFE[key];
+                        const caught = this.state.pokedex.includes(key);
+                        const isShiny = this.state.shinyCollection && this.state.shinyCollection.includes(key);
+                        const imageUrl = this.state.pokedexImages[key] || IMAGE_MAP[key];
+                        const hasImage = Boolean(imageUrl);
+                        
+                        const el = document.createElement('div');
+                        el.className = `relative aspect-square rounded overflow-hidden transition-all rarity-border-${animal.rarity}
+                            ${caught ? 'cursor-pointer hover:scale-105' : 'opacity-50 grayscale'}
+                            ${isShiny ? 'shiny-creature' : ''}`;
+                        
+                        if (caught) {
+                            el.onclick = () => app.openAnimalDetail(key);
+                            let content = `<div class="text-4xl mb-1 animate-pop filter drop-shadow-lg">${animal.emoji}</div>`;
+                            if (hasImage) {
+                                content = `<img src="${imageUrl}" class="absolute inset-0 w-full h-full object-cover animate-pop">`;
+                            }
+                            el.innerHTML = `
+                                ${isShiny ? '<div class="shiny-badge">✨ SHINY</div>' : ''}
+                                <div class="w-full h-full flex flex-col items-center justify-center p-1 relative z-10 bg-emerald-950/40">
+                                    ${content}
+                                    <div class="absolute bottom-0 w-full bg-black/70 text-center py-0.5 backdrop-blur-sm">
+                                        <div class="text-[9px] font-bold text-emerald-100 truncate px-1 font-cinzel">${animal.name}</div>
+                                        <div class="text-[7px] text-emerald-400/60">${getCatchRate(animal.rarity)}</div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // Show silhouette or question mark
+                            el.innerHTML = `
+                                <div class="w-full h-full flex flex-col items-center justify-center bg-emerald-950/60">
+                                    <i class="fa-solid fa-question text-emerald-800/50 text-2xl"></i>
+                                </div>
+                            `;
+                        }
+                        grid.appendChild(el);
+                    });
+                    
+                    section.appendChild(grid);
+                    container.appendChild(section);
+                });
+            },
+
+            buyItem: function(type, id) {
+                const item = TRAPS.find(t => t.id === id);
+                if (this.state.ownedTraps.includes(id)) {
+                    this.state.trapId = id;
+                    this.renderAll();
+                    this.openModal('traps');
+                    return;
+                }
+                if (this.state.gold >= item.cost) {
+                    this.state.gold -= item.cost;
+                    this.state.trapId = id;
+                    this.state.ownedTraps.push(id);
+                    this.log(`Acquired ${item.name}`, "legendary");
+                    this.saveState();
+                    this.renderAll();
+                    this.openModal('traps');
+                } else {
+                    alert("Insufficient Gold!");
+                }
+            },
+
+            buyBait: function(id, qty) {
+                const item = BAITS.find(b => b.id === id);
+                const cost = item.cost * qty;
+                if (this.state.gold >= cost) {
+                    this.state.gold -= cost;
+                    this.state.inventory[id] = (this.state.inventory[id] || 0) + qty;
+                    this.saveState();
+                    this.renderAll();
+                    this.openModal('bait');
+                } else {
+                    alert("Insufficient Gold!");
+                }
+            },
+
+            equipItem: function(type, id) {
+                if (type === 'bait') {
+                    this.state.baitId = id;
+                    this.renderAll();
+                    this.openModal('bait');
+                }
+            },
+
+            travel: function(locId) {
+                const loc = LOCATIONS.find(l => l.id === locId);
+                if (this.state.gold >= 100) {
+                    this.state.gold -= 100;
+                    this.state.locationId = locId;
+                    this.log(`Traveled to ${loc.name}`, "legendary");
+                    this.closeModal();
+                    this.renderAll();
+                    // Restart ambient audio for new location
+                    this.startAmbient();
+                } else {
+                    alert("Travel costs 100g.");
+                }
+            },
+
+            // --- MODALS & ZOOM ---
+            openModal: function(type) {
+                const modal = document.getElementById('modal-overlay');
+                const title = document.getElementById('modal-title');
+                const content = document.getElementById('modal-content');
+                modal.classList.remove('hidden');
+
+                if (type === 'traps') {
+                    title.innerText = "Equipment";
+                    content.innerHTML = this.renderShop(TRAPS, 'trap');
+                } else if (type === 'bait') {
+                    title.innerText = "Apothecary";
+                    content.innerHTML = this.renderShop(BAITS, 'bait');
+                } else if (type === 'travel') {
+                    title.innerText = "World Map";
+                    content.innerHTML = this.renderTravel();
+                } else if (type === 'custom') {
+                    // Already populated
+                }
+            },
+            
+            closeModal: function() {
+                document.getElementById('modal-overlay').classList.add('hidden');
+            },
+            
+            zoomImage: function(src) {
+                const overlay = document.getElementById('zoom-overlay');
+                const img = document.getElementById('zoom-img');
+                img.src = src;
+                overlay.classList.remove('hidden');
+            },
+
+            renderShop: function(items, type) {
+                let html = `<div class="flex flex-col gap-2 p-4 bg-emerald-950/50">`;
+                items.forEach(item => {
+                    const isOwned = type === 'trap' && this.state.ownedTraps.includes(item.id); 
+                    const isEquipped = (type === 'trap' ? this.state.trapId : this.state.baitId) === item.id;
+                    
+                    html += `
+                    <div class="bg-emerald-900/30 border border-emerald-700/50 p-2 rounded flex items-center gap-3 relative ${isEquipped ? 'border-emerald-400 ring-1 ring-emerald-400/50' : ''}">
+                        <div class="text-2xl w-10 h-10 bg-emerald-950/50 rounded flex items-center justify-center border border-emerald-700/50">${item.img}</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-emerald-100 text-sm">${item.name}</div>
+                            <div class="text-[10px] text-emerald-300/60">Power: <span class="text-teal-400">${item.power}</span> ${item.luck ? `Luck: <span class="text-sky-400">${item.luck}</span>` : ''}</div>
+                        </div>
+                        <div class="flex flex-col items-end gap-1">
+                            ${type === 'bait' ? `<div class="text-[10px] font-mono text-emerald-300/60">Own: ${this.state.inventory[item.id] === Infinity ? '∞' : this.state.inventory[item.id] || 0}</div>` : ''}
+                            
+                            ${isEquipped 
+                                ? `<span class="text-[9px] font-bold text-teal-400 bg-teal-900/30 px-2 py-1 rounded">Equipped</span>` 
+                                : (type === 'trap' 
+                                    ? (isOwned 
+                                        ? `<button onclick="app.buyItem('trap', '${item.id}')" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded">Equip</button>`
+                                        : `<button onclick="app.buyItem('trap', '${item.id}')" class="bg-amber-700 hover:bg-amber-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow">${item.cost}g</button>`)
+                                    : `<div class="flex gap-1">
+                                        <button onclick="app.buyBait('${item.id}', 10)" class="bg-amber-700 hover:bg-amber-600 text-white text-[9px] font-bold px-1.5 py-1 rounded">Buy 10 (${item.cost*10}g)</button>
+                                        ${(this.state.inventory[item.id] > 0 || item.id === 'bread') ? `<button onclick="app.equipItem('bait', '${item.id}')" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-1 rounded">Use</button>` : ''}
+                                       </div>`
+                                  )
+                            }
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                return html;
+            },
+
+            renderTravel: function() {
+                let html = `<div class="grid gap-3 p-4 bg-emerald-950/50">`;
+                LOCATIONS.forEach(loc => {
+                    const locked = this.state.rankIndex < loc.minRank;
+                    const isCurrent = this.state.locationId === loc.id;
+                    html += `
+                    <div onclick="${!locked && !isCurrent ? `app.travel('${loc.id}')` : ''}" 
+                         class="relative h-16 rounded-lg overflow-hidden border transition-all
+                         ${isCurrent ? 'border-emerald-400 grayscale-0' : 'border-emerald-700/50 grayscale'} 
+                         ${locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-emerald-400 hover:grayscale-0'}">
+                        <img src="${loc.img}" class="absolute inset-0 w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-900/50 to-transparent flex items-center px-4">
+                            <div>
+                                <div class="font-bold text-emerald-100 text-sm font-cinzel">${loc.name}</div>
+                                ${locked ? `<div class="text-[10px] text-red-400 font-bold"><i class="fa-solid fa-lock mr-1"></i>Need ${RANKS[loc.minRank].name}</div>` : ''}
+                            </div>
+                            ${isCurrent ? '<div class="absolute right-4 text-emerald-400 text-xl"><i class="fa-solid fa-location-dot"></i></div>' : ''}
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                return html;
+            },
+
+            openAnimalDetail: function(key) {
+                const animal = WILDLIFE[key];
+                const imageUrl = this.state.pokedexImages[key] || IMAGE_MAP[key];
+                const hasImage = Boolean(imageUrl);
+                
+                const modalTitle = document.getElementById('modal-title');
+                const modalContent = document.getElementById('modal-content');
+                
+                modalTitle.innerHTML = `<i class="fa-solid fa-book-open text-amber-600 text-sm"></i><span>Bestiary Entry</span>`;
+                
+                // Rarity stars
+                const rarityStars = '★'.repeat(animal.rarity) + '☆'.repeat(6 - animal.rarity);
+                const rarityNames = ['', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythical'];
+                
+                // 1:1 Square Image with Zoom
+                let visual = hasImage 
+                    ? `<div class="fantasy-card aspect-square w-full max-w-[220px] rounded overflow-hidden cursor-pointer mb-3 animate-pop mx-auto" onclick="app.zoomImage('${imageUrl}')">
+                         <img src="${imageUrl}" class="w-full h-full object-cover">
+                       </div>`
+                    : `<div class="fantasy-card aspect-square w-full max-w-[220px] rounded flex items-center justify-center text-6xl mb-3 animate-pop mx-auto">${animal.emoji}</div>`;
+
+                // Get lore from static data
+                const loreText = CREATURE_LORE[key] || "The Mysterious One. A creature of Singapore's wild places, shrouded in local legend. Much remains unknown about this enigmatic beast.";
+                
+                // Parse nickname and legend
+                let nickname = "";
+                let legend = "";
+                const firstPeriodIndex = loreText.indexOf('.');
+                
+                if (firstPeriodIndex !== -1) {
+                    nickname = loreText.substring(0, firstPeriodIndex + 1).trim();
+                    legend = loreText.substring(firstPeriodIndex + 1).trim();
+                } else {
+                    nickname = loreText;
+                }
+                
+                modalContent.innerHTML = `
+                    <div class="flex flex-col text-amber-50 items-center py-5 px-4">
+                        ${visual}
+                        
+                        <!-- Name and Rarity -->
+                        <h2 class="text-2xl font-cinzel font-bold text-amber-400 text-glow-gold mb-1">${animal.name}</h2>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="rarity-${animal.rarity} text-sm tracking-widest">${rarityStars}</span>
+                            <span class="text-[10px] uppercase tracking-wider text-amber-600/70 font-bold">${rarityNames[animal.rarity]}</span>
+                        </div>
+                        
+                        <!-- Nickname/Title -->
+                        <div class="w-full text-center mb-4">
+                            <span class="inline-block px-4 py-1 bg-amber-900/30 border border-amber-700/30 rounded text-amber-500 text-sm font-bold medieval-text">
+                                ${nickname.replace('.', '')}
+                            </span>
+                        </div>
+                        
+                        <!-- Divider -->
+                        <div class="divider-ornate w-3/4 mb-4"></div>
+                        
+                        <!-- Lore Section -->
+                        <div class="w-full px-2">
+                            <div class="parchment rounded p-4 text-amber-100/90 text-sm leading-relaxed font-serif italic">
+                                <span class="text-amber-500 text-2xl font-bold float-left mr-2 leading-none">"</span>
+                                ${legend}
+                                <span class="text-amber-500 text-xl font-bold">"</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Stats Section -->
+                        <div class="w-full mt-4 grid grid-cols-2 gap-2 px-2">
+                            <div class="bg-amber-900/20 border border-amber-800/30 rounded p-2 text-center">
+                                <div class="text-[9px] uppercase text-amber-600/60 font-bold">Renown</div>
+                                <div class="text-amber-400 font-bold medieval-text">+${animal.xp.toLocaleString()}</div>
+                            </div>
+                            <div class="bg-amber-900/20 border border-amber-800/30 rounded p-2 text-center">
+                                <div class="text-[9px] uppercase text-amber-600/60 font-bold">Gold Value</div>
+                                <div class="text-amber-400 font-bold medieval-text">${animal.gold.toLocaleString()}g</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Scientific Description -->
+                        <div class="w-full mt-4 px-2">
+                            <div class="text-[10px] uppercase text-amber-700/50 font-bold mb-1 text-center">Field Notes</div>
+                            <div class="text-amber-200/50 text-xs text-center font-serif border-t border-amber-900/30 pt-2">
+                                ${animal.desc}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                this.openModal('custom');
+            },
+
+            startCooldownUI: function() {
+                const btn = document.getElementById('hunt-btn');
+                const overlay = document.getElementById('cooldown-overlay');
+                const timer = document.getElementById('cooldown-timer');
+                
+                overlay.classList.remove('hidden');
+                btn.disabled = true;
+                btn.classList.add('scale-90', 'opacity-50');
+
+                let left = 1; 
+                timer.innerText = left;
+                
+                const int = setInterval(() => {
+                    left--;
+                    timer.innerText = left;
+                    if (left <= 0) {
+                        clearInterval(int);
+                        overlay.classList.add('hidden');
+                        btn.disabled = false;
+                        btn.classList.remove('scale-90', 'opacity-50');
+                    }
+                }, 1000);
+            },
+
+            log: function(msg, type="normal", wildlifeId=null) {
+                const entry = { 
+                    text: msg, 
+                    type: type, 
+                    wildlifeId: wildlifeId,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                };
+                this.state.journal.unshift(entry);
+                if (this.state.journal.length > 20) this.state.journal.pop();
+                this.renderJournal();
+            },
+            
+            // Enhanced audio feedback using Web Audio API
+            audioCtx: null,
+            ambientGain: null,
+            ambientNodes: [],
+            
+            initAudio: function() {
+                if (!this.audioCtx) {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                return this.audioCtx;
+            },
+            
+            playSound: function(type) {
+                try {
+                    const ctx = this.initAudio();
+                    
+                    if (type === 'catch') {
+                        // Melodic forest chime - ascending notes
+                        const notes = [392, 523.25, 659.25, 784]; // G4, C5, E5, G5
+                        notes.forEach((freq, i) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'sine';
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.08);
+                            gain.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.08);
+                            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.08 + 0.25);
+                            osc.start(ctx.currentTime + i * 0.08);
+                            osc.stop(ctx.currentTime + i * 0.08 + 0.3);
+                        });
+                    } else if (type === 'rare') {
+                        // Magical discovery fanfare with harmonics
+                        const chords = [
+                            [523.25, 659.25, 784],      // C major
+                            [587.33, 739.99, 880],      // D major  
+                            [659.25, 830.61, 987.77],   // E major
+                            [784, 987.77, 1174.66]      // G major (octave)
+                        ];
+                        chords.forEach((chord, i) => {
+                            chord.forEach(freq => {
+                                const osc = ctx.createOscillator();
+                                const gain = ctx.createGain();
+                                osc.type = 'triangle';
+                                osc.connect(gain);
+                                gain.connect(ctx.destination);
+                                osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.2);
+                                gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.2);
+                                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.2 + 0.4);
+                                osc.start(ctx.currentTime + i * 0.2);
+                                osc.stop(ctx.currentTime + i * 0.2 + 0.5);
+                            });
+                        });
+                    } else if (type === 'fail') {
+                        // Soft rustling/whoosh - creature fled
+                        const noise = ctx.createBufferSource();
+                        const bufferSize = ctx.sampleRate * 0.3;
+                        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                        const data = buffer.getChannelData(0);
+                        for (let i = 0; i < bufferSize; i++) {
+                            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+                        }
+                        noise.buffer = buffer;
+                        const filter = ctx.createBiquadFilter();
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(800, ctx.currentTime);
+                        const gain = ctx.createGain();
+                        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                        noise.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(ctx.destination);
+                        noise.start(ctx.currentTime);
+                    } else if (type === 'shiny') {
+                        // Sparkle sound for shiny discovery
+                        for (let i = 0; i < 8; i++) {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'sine';
+                            const freq = 1000 + Math.random() * 2000;
+                            osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.05);
+                            gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.05);
+                            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.05 + 0.15);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(ctx.currentTime + i * 0.05);
+                            osc.stop(ctx.currentTime + i * 0.05 + 0.2);
+                        }
+                    }
+                } catch(e) {
+                    // Audio not supported, fail silently
+                }
+            },
+            
+            // Ambient audio system
+            startAmbient: function() {
+                try {
+                    const ctx = this.initAudio();
+                    this.stopAmbient();
+                    
+                    const loc = LOCATIONS.find(l => l.id === this.state.locationId);
+                    if (!loc) return;
+                    
+                    this.ambientGain = ctx.createGain();
+                    this.ambientGain.gain.setValueAtTime(0.08, ctx.currentTime);
+                    this.ambientGain.connect(ctx.destination);
+                    
+                    // Location-specific ambient sounds
+                    if (loc.id === 'urban') {
+                        // Urban: distant traffic hum + occasional bird
+                        this.createDrone(ctx, 80, 'sawtooth', 0.03);
+                        this.createDrone(ctx, 120, 'sine', 0.02);
+                    } else if (loc.id === 'botanic') {
+                        // Garden: gentle wind + birds
+                        this.createWindNoise(ctx, 0.04);
+                        this.createBirdChirps(ctx);
+                    } else if (loc.id === 'sungei') {
+                        // Wetland: water + insects
+                        this.createWaterSound(ctx, 0.05);
+                        this.createInsectBuzz(ctx);
+                    } else if (loc.id === 'ubin') {
+                        // Island: jungle ambience
+                        this.createWindNoise(ctx, 0.03);
+                        this.createInsectBuzz(ctx);
+                        this.createBirdChirps(ctx);
+                    } else if (loc.id === 'bukit') {
+                        // Rainforest: full jungle
+                        this.createWindNoise(ctx, 0.02);
+                        this.createInsectBuzz(ctx);
+                        this.createBirdChirps(ctx);
+                        this.createDrone(ctx, 60, 'sine', 0.02);
+                    }
+                } catch(e) {
+                    console.log('Ambient audio not available');
+                }
+            },
+            
+            stopAmbient: function() {
+                this.ambientNodes.forEach(node => {
+                    try { node.stop(); } catch(e) {}
+                });
+                this.ambientNodes = [];
+            },
+            
+            createDrone: function(ctx, freq, type, vol) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(this.ambientGain);
+                osc.start();
+                this.ambientNodes.push(osc);
+            },
+            
+            createWindNoise: function(ctx, vol) {
+                const bufferSize = 2 * ctx.sampleRate;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                noise.loop = true;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, ctx.currentTime);
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ambientGain);
+                noise.start();
+                this.ambientNodes.push(noise);
+            },
+            
+            createWaterSound: function(ctx, vol) {
+                const bufferSize = 2 * ctx.sampleRate;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                noise.loop = true;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(600, ctx.currentTime);
+                filter.Q.setValueAtTime(2, ctx.currentTime);
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ambientGain);
+                noise.start();
+                this.ambientNodes.push(noise);
+            },
+            
+            createInsectBuzz: function(ctx) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, ctx.currentTime);
+                lfo.frequency.setValueAtTime(8, ctx.currentTime);
+                lfoGain.gain.setValueAtTime(20, ctx.currentTime);
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                gain.gain.setValueAtTime(0.015, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(this.ambientGain);
+                osc.start();
+                lfo.start();
+                this.ambientNodes.push(osc, lfo);
+            },
+            
+            createBirdChirps: function(ctx) {
+                const chirp = () => {
+                    if (!this.ambientGain) return;
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    const baseFreq = 1500 + Math.random() * 1500;
+                    osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.3, ctx.currentTime + 0.05);
+                    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.8, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.03, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ambientGain);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.2);
+                    setTimeout(chirp, 2000 + Math.random() * 5000);
+                };
+                setTimeout(chirp, 1000);
+            },
+            
+            // Discovery overlay for new species
+            showDiscovery: function(animal, dexId) {
+                const overlay = document.getElementById('discovery-overlay');
+                const nameEl = document.getElementById('discovery-name');
+                const imgEl = document.getElementById('discovery-image');
+                
+                nameEl.textContent = animal.name;
+                const imgUrl = IMAGE_MAP[dexId];
+                if (imgUrl) {
+                    imgEl.src = imgUrl;
+                } else {
+                    imgEl.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="60" x="25" font-size="50">' + animal.emoji + '</text></svg>';
+                }
+                
+                overlay.classList.remove('hidden');
+                this.playSound('rare');
+                
+                // Auto-close after 3 seconds
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 3500);
+            },
+            
+            closeDiscovery: function() {
+                document.getElementById('discovery-overlay').classList.add('hidden');
+            },
+            
+            clearJournal: function() {
+                this.state.journal = [];
+                this.renderJournal();
+            },
+
+            switchTab: function(tabId) {
+                document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+                document.getElementById('view-' + tabId).classList.remove('hidden');
+            }
+        };
+
+        // FIX: Explicitly attach app to window to prevent ReferenceError in HTML event handlers
+        window.app = app;
+        app.init();
+        
+        // Start ambient audio on first user interaction
+        document.addEventListener('click', function initAmbient() {
+            app.startAmbient();
+            document.removeEventListener('click', initAmbient);
+        }, { once: true });
+    </script>
+</body>
+</html>

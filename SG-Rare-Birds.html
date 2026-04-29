@@ -335,12 +335,12 @@
             <div class="relative">
                 <input type="text" 
                        id="region-search" 
-                       placeholder="Search region or enter code..." 
+                       placeholder="Region, state, or hotspot code..." 
                        class="bg-transparent text-white text-sm font-medium focus:outline-none w-64 placeholder-slate-500"
                        autocomplete="off"
-                       title="Type to search regions or enter any eBird code (e.g., US-CA, GB-ENG)">
+                       title="Enter region (US, SG), state (US-CA, MY-01), or hotspot code (L12345678). Find hotspot codes at ebird.org">
                 <!-- Autocomplete dropdown -->
-                <div id="region-suggestions" class="hidden absolute top-full left-0 mt-2 w-80 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-96 overflow-y-auto z-50">
+                <div id="region-suggestions" class="hidden absolute top-full left-0 mt-2 w-80 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-96 overflow-y-auto z-[1000]">
                 </div>
             </div>
             <button id="region-search-btn" class="text-slate-400 hover:text-white transition" title="Search region">

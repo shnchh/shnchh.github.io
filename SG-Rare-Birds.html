@@ -669,6 +669,9 @@
                 return a.calculatedDistance - b.calculatedDistance;
             });
             
+            // Get current region code
+            const currentRegionCode = getRegionCode();
+            
             // Calculate distances for regions/countries
             const regionsWithDistance = Object.entries(REGION_COORDS).map(([code, data]) => {
                 const distance = calculateDistance(
@@ -680,27 +683,39 @@
                 return { code, data, distance };
             }).sort((a, b) => a.distance - b.distance);
             
+            // Separate current region and other regions
+            const currentRegion = regionsWithDistance.find(r => r.code === currentRegionCode);
+            const otherRegions = regionsWithDistance.filter(r => r.code !== currentRegionCode).slice(0, 4);
+            
+            // Combine current region + 4 nearest others
+            const regionsToShow = currentRegion ? [currentRegion, ...otherRegions] : regionsWithDistance.slice(0, 5);
+            
             document.getElementById('hotspots-location-info').textContent = `Found ${sortedHotspots.length} hotspot${sortedHotspots.length > 1 ? 's' : ''} within 25km:`;
             
             let html = '';
             
             // Add Countries & Regions section first
             html += '<div class="px-3 py-2 bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase sticky top-0">Countries & Regions</div>';
-            html += regionsWithDistance.slice(0, 5).map(({ code, data, distance }) => `
-                <div class="hotspot-item bg-slate-700/50 hover:bg-slate-600/50 rounded-lg p-4 cursor-pointer transition border border-slate-600 hover:border-amber-500"
-                     onclick="selectRegion('${code}')">
-                    <div class="flex justify-between items-start gap-3">
-                        <div class="flex-1">
-                            <div class="text-white font-medium mb-1">${data.name}</div>
-                            <div class="text-slate-400 text-sm flex items-center gap-3">
-                                <span><i class="fa-solid fa-globe mr-1"></i>Country/Region</span>
-                                <span><i class="fa-solid fa-route mr-1"></i>${distance.toFixed(0)} km away</span>
+            html += regionsToShow.map(({ code, data, distance }, index) => {
+                const isCurrent = code === currentRegionCode;
+                const borderColor = isCurrent ? 'border-amber-500' : 'border-slate-600 hover:border-amber-500';
+                const badge = isCurrent ? '<span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded ml-2">Current</span>' : '';
+                return `
+                    <div class="hotspot-item bg-slate-700/50 hover:bg-slate-600/50 rounded-lg p-4 cursor-pointer transition border ${borderColor}"
+                         onclick="selectRegion('${code}')">
+                        <div class="flex justify-between items-start gap-3">
+                            <div class="flex-1">
+                                <div class="text-white font-medium mb-1 flex items-center">${data.name}${badge}</div>
+                                <div class="text-slate-400 text-sm flex items-center gap-3">
+                                    <span><i class="fa-solid fa-globe mr-1"></i>Country/Region</span>
+                                    <span><i class="fa-solid fa-route mr-1"></i>${distance.toFixed(0)} km away</span>
+                                </div>
                             </div>
+                            <div class="text-slate-500 text-xs font-mono whitespace-nowrap">${code}</div>
                         </div>
-                        <div class="text-slate-500 text-xs font-mono whitespace-nowrap">${code}</div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
             // Add Hotspots section
             html += '<div class="px-3 py-2 bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase mt-2 sticky top-0">Nearby Hotspots</div>';

@@ -368,7 +368,7 @@
     </div>
     
     <!-- Header -->
-    <header class="main-header bg-slate-800/90 backdrop-blur border-b border-slate-700 px-6 py-4 flex items-center justify-between z-50 relative" style="overflow: visible;">
+    <header class="main-header bg-slate-800/90 backdrop-blur border-b border-slate-700 px-6 py-4 flex items-center justify-between relative" style="overflow: visible; z-index: 9999;">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
                 <i class="fa-solid fa-crow text-white text-xl"></i>
@@ -638,9 +638,16 @@
                 return;
             }
             
-            document.getElementById('hotspots-location-info').textContent = `Found ${hotspots.length} hotspot${hotspots.length > 1 ? 's' : ''} within 25km:`;
+            // Sort hotspots by distance (closest first)
+            const sortedHotspots = hotspots.sort((a, b) => {
+                const distA = a.distanceKm || 999999;
+                const distB = b.distanceKm || 999999;
+                return distA - distB;
+            });
             
-            const html = hotspots.slice(0, 20).map(hotspot => {
+            document.getElementById('hotspots-location-info').textContent = `Found ${sortedHotspots.length} hotspot${sortedHotspots.length > 1 ? 's' : ''} within 25km (sorted by distance):`;
+            
+            const html = sortedHotspots.slice(0, 20).map(hotspot => {
                 const distance = hotspot.distanceKm ? hotspot.distanceKm.toFixed(1) + ' km' : '';
                 return `
                     <div class="hotspot-item bg-slate-700/50 hover:bg-slate-600/50 rounded-lg p-4 cursor-pointer transition border border-slate-600 hover:border-emerald-500"
@@ -661,10 +668,10 @@
             
             listDiv.innerHTML = html;
             
-            if (hotspots.length > 20) {
+            if (sortedHotspots.length > 20) {
                 listDiv.innerHTML += `
                     <div class="text-slate-400 text-sm text-center py-2">
-                        Showing first 20 of ${hotspots.length} hotspots
+                        Showing 20 closest of ${sortedHotspots.length} hotspots
                     </div>
                 `;
             }

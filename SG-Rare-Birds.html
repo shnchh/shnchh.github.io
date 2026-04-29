@@ -431,6 +431,43 @@
             'KE': { lat: -0.0236, lng: 37.9062, zoom: 6, name: 'Kenya' }
         };
         
+        // Popular hotspots database
+        const POPULAR_HOTSPOTS = {
+            // Singapore
+            'L2180959': { name: 'Singapore Botanic Gardens', lat: 1.3138, lng: 103.8159, zoom: 15, region: 'Singapore' },
+            'L974576': { name: 'Sungei Buloh Wetland Reserve', lat: 1.4458, lng: 103.7302, zoom: 15, region: 'Singapore' },
+            'L2083877': { name: 'Pasir Ris Park', lat: 1.3793, lng: 103.9498, zoom: 15, region: 'Singapore' },
+            'L2084165': { name: 'Pulau Ubin', lat: 1.4043, lng: 103.9601, zoom: 14, region: 'Singapore' },
+            'L3775551': { name: 'Central Catchment Nature Reserve', lat: 1.3644, lng: 103.8050, zoom: 14, region: 'Singapore' },
+            'L2427374': { name: 'Kent Ridge Park', lat: 1.2828, lng: 103.7847, zoom: 15, region: 'Singapore' },
+            'L8336945': { name: 'Coney Island Park', lat: 1.4118, lng: 103.9325, zoom: 15, region: 'Singapore' },
+            'L5652403': { name: 'Gardens by the Bay', lat: 1.2816, lng: 103.8636, zoom: 15, region: 'Singapore' },
+            
+            // Malaysia - Johor
+            'L2631784': { name: 'Johor Bahru City', lat: 1.4927, lng: 103.7414, zoom: 13, region: 'Johor, Malaysia' },
+            'L7888736': { name: 'Tanjung Piai National Park', lat: 1.2656, lng: 103.5087, zoom: 14, region: 'Johor, Malaysia' },
+            'L3776116': { name: 'Gunung Pulai', lat: 1.5667, lng: 103.5333, zoom: 13, region: 'Johor, Malaysia' },
+            'L10634823': { name: 'Endau-Rompin National Park', lat: 2.4000, lng: 103.3667, zoom: 12, region: 'Johor, Malaysia' },
+            
+            // Malaysia - Other
+            'L1316558': { name: 'Taman Negara National Park', lat: 4.4667, lng: 102.4167, zoom: 11, region: 'Pahang, Malaysia' },
+            'L3776047': { name: 'Fraser\'s Hill', lat: 3.7167, lng: 101.7333, zoom: 13, region: 'Pahang, Malaysia' },
+            'L2630841': { name: 'Kuala Lumpur Bird Park', lat: 3.1442, lng: 101.6885, zoom: 16, region: 'Kuala Lumpur, Malaysia' },
+            
+            // United States - Popular
+            'L109516': { name: 'Central Park, New York', lat: 40.7812, lng: -73.9665, zoom: 14, region: 'New York, USA' },
+            'L268242': { name: 'Point Reyes National Seashore, CA', lat: 38.0437, lng: -122.8733, zoom: 12, region: 'California, USA' },
+            'L286031': { name: 'Everglades National Park, FL', lat: 25.2866, lng: -80.8987, zoom: 11, region: 'Florida, USA' },
+            
+            // UK
+            'L717776': { name: 'RSPB Bempton Cliffs', lat: 54.1314, lng: -0.1667, zoom: 14, region: 'England, UK' },
+            'L823599': { name: 'London Wetland Centre', lat: 51.4789, lng: -0.2289, zoom: 15, region: 'England, UK' },
+            
+            // Australia
+            'L1075502': { name: 'Kakadu National Park', lat: -12.6500, lng: 132.4167, zoom: 10, region: 'Northern Territory, Australia' },
+            'L960690': { name: 'Sydney Harbour National Park', lat: -33.8568, lng: 151.2153, zoom: 13, region: 'New South Wales, Australia' }
+        };
+        
         // Initialize map
         const defaultRegion = getRegionCode();
         const coords = REGION_COORDS[defaultRegion] || REGION_COORDS['SG'];
@@ -804,9 +841,18 @@
         }
         
         function updateMapRegion(code) {
+            // Check if it's a known region
             const coords = REGION_COORDS[code];
             if (coords) {
                 map.flyTo([coords.lat, coords.lng], coords.zoom, { duration: 1.5 });
+                return;
+            }
+            
+            // Check if it's a known hotspot
+            const hotspot = POPULAR_HOTSPOTS[code];
+            if (hotspot) {
+                map.flyTo([hotspot.lat, hotspot.lng], hotspot.zoom, { duration: 1.5 });
+                return;
             }
         }
         
@@ -816,7 +862,7 @@
             const code = input.value.trim().toUpperCase();
             
             if (!code) {
-                alert('Please enter an eBird region code (e.g., US, CA, US-CA, GB-ENG)');
+                alert('Please enter an eBird region code (e.g., US, CA, US-CA, GB-ENG) or hotspot code');
                 return;
             }
             
@@ -826,10 +872,18 @@
             // Set the region code
             setRegionCode(code);
             
-            // Try to update map if it's a known region
+            // Update the region name display
+            const regionNameEl = document.getElementById('region-name');
             if (REGION_COORDS[code]) {
-                updateMapRegion(code);
+                regionNameEl.textContent = REGION_COORDS[code].name;
+            } else if (POPULAR_HOTSPOTS[code]) {
+                regionNameEl.textContent = POPULAR_HOTSPOTS[code].name;
+            } else {
+                regionNameEl.textContent = code;
             }
+            
+            // Try to update map if it's a known region or hotspot
+            updateMapRegion(code);
             
             // Auto-fetch with new region
             if (getApiKey()) {
@@ -848,26 +902,54 @@
             }
             
             // Filter regions by code or name
-            const matches = Object.entries(REGION_COORDS).filter(([code, data]) => {
+            const regionMatches = Object.entries(REGION_COORDS).filter(([code, data]) => {
                 return code.toLowerCase().includes(term) || 
                        data.name.toLowerCase().includes(term);
             });
             
-            if (matches.length === 0) {
-                suggestionsDiv.innerHTML = '<div class="px-4 py-3 text-slate-400 text-sm">No matches. Enter any eBird region code (e.g., US-CA, GB-ENG)</div>';
+            // Filter hotspots by code, name, or region
+            const hotspotMatches = Object.entries(POPULAR_HOTSPOTS).filter(([code, data]) => {
+                return code.toLowerCase().includes(term) || 
+                       data.name.toLowerCase().includes(term) ||
+                       data.region.toLowerCase().includes(term);
+            });
+            
+            if (regionMatches.length === 0 && hotspotMatches.length === 0) {
+                suggestionsDiv.innerHTML = '<div class="px-4 py-3 text-slate-400 text-sm">No matches. Enter any eBird region/hotspot code (e.g., US-CA, L12345678)</div>';
                 suggestionsDiv.classList.remove('hidden');
                 return;
             }
             
-            // Build suggestions HTML
-            const html = matches.map(([code, data]) => `
-                <div class="region-suggestion px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-b-0 transition" data-code="${code}">
-                    <div class="flex justify-between items-center">
-                        <span class="text-white font-medium">${data.name}</span>
-                        <span class="text-slate-400 text-sm font-mono">${code}</span>
+            let html = '';
+            
+            // Add region matches
+            if (regionMatches.length > 0) {
+                html += '<div class="px-3 py-2 bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase">Countries & Regions</div>';
+                html += regionMatches.map(([code, data]) => `
+                    <div class="region-suggestion px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 transition" data-code="${code}">
+                        <div class="flex justify-between items-center">
+                            <span class="text-white font-medium">${data.name}</span>
+                            <span class="text-slate-400 text-sm font-mono">${code}</span>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
+            }
+            
+            // Add hotspot matches
+            if (hotspotMatches.length > 0) {
+                html += '<div class="px-3 py-2 bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase mt-1">Hotspots</div>';
+                html += hotspotMatches.slice(0, 10).map(([code, data]) => `
+                    <div class="region-suggestion px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-b-0 transition" data-code="${code}" data-lat="${data.lat}" data-lng="${data.lng}" data-zoom="${data.zoom}">
+                        <div class="flex justify-between items-start gap-3">
+                            <div>
+                                <div class="text-white font-medium">${data.name}</div>
+                                <div class="text-slate-400 text-xs mt-1">${data.region}</div>
+                            </div>
+                            <span class="text-slate-500 text-xs font-mono whitespace-nowrap">${code}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
             
             suggestionsDiv.innerHTML = html;
             suggestionsDiv.classList.remove('hidden');
@@ -876,7 +958,17 @@
             suggestionsDiv.querySelectorAll('.region-suggestion').forEach(item => {
                 item.addEventListener('click', function() {
                     const code = this.dataset.code;
+                    const lat = this.dataset.lat;
+                    const lng = this.dataset.lng;
+                    const zoom = this.dataset.zoom;
+                    
                     document.getElementById('region-search').value = code;
+                    
+                    // If it's a hotspot with coordinates, fly to it
+                    if (lat && lng && zoom) {
+                        map.flyTo([parseFloat(lat), parseFloat(lng)], parseInt(zoom), { duration: 1.5 });
+                    }
+                    
                     handleRegionSearch();
                 });
             });

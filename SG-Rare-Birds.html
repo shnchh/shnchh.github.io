@@ -638,17 +638,46 @@
                 return;
             }
             
+            // Debug: log first hotspot to see structure
+            if (hotspots.length > 0) {
+                console.log('First hotspot structure:', hotspots[0]);
+            }
+            
+            // Calculate distances manually if not provided
+            function calculateDistance(lat1, lng1, lat2, lng2) {
+                const R = 6371; // Earth's radius in km
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                          Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+            
+            // Add distance to each hotspot
+            hotspots.forEach(hotspot => {
+                if (!hotspot.distance && !hotspot.distanceKm) {
+                    hotspot.calculatedDistance = calculateDistance(
+                        parseFloat(lat), 
+                        parseFloat(lng), 
+                        hotspot.lat, 
+                        hotspot.lng
+                    );
+                } else {
+                    hotspot.calculatedDistance = hotspot.distance || hotspot.distanceKm || 0;
+                }
+            });
+            
             // Sort hotspots by distance (closest first)
             const sortedHotspots = hotspots.sort((a, b) => {
-                const distA = a.distanceKm || 999999;
-                const distB = b.distanceKm || 999999;
-                return distA - distB;
+                return a.calculatedDistance - b.calculatedDistance;
             });
             
             document.getElementById('hotspots-location-info').textContent = `Found ${sortedHotspots.length} hotspot${sortedHotspots.length > 1 ? 's' : ''} within 25km (sorted by distance):`;
             
             const html = sortedHotspots.slice(0, 20).map(hotspot => {
-                const distance = hotspot.distanceKm ? hotspot.distanceKm.toFixed(1) + ' km' : '';
+                const distance = hotspot.calculatedDistance.toFixed(1) + ' km';
                 return `
                     <div class="hotspot-item bg-slate-700/50 hover:bg-slate-600/50 rounded-lg p-4 cursor-pointer transition border border-slate-600 hover:border-emerald-500"
                          onclick="selectHotspot('${hotspot.locId}', '${hotspot.locName.replace(/'/g, "\\'")}', ${hotspot.lat}, ${hotspot.lng})">
@@ -657,7 +686,7 @@
                                 <div class="text-white font-medium mb-1">${hotspot.locName}</div>
                                 <div class="text-slate-400 text-sm flex items-center gap-3">
                                     <span><i class="fa-solid fa-location-dot mr-1"></i>${hotspot.countryCode}</span>
-                                    ${distance ? `<span><i class="fa-solid fa-route mr-1"></i>${distance} away</span>` : ''}
+                                    <span><i class="fa-solid fa-route mr-1"></i>${distance} away</span>
                                 </div>
                             </div>
                             <div class="text-slate-500 text-xs font-mono whitespace-nowrap">${hotspot.locId}</div>

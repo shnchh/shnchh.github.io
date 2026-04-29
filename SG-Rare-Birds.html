@@ -1109,8 +1109,30 @@
             const suggestionsDiv = document.getElementById('region-suggestions');
             const term = searchTerm.toLowerCase();
             
+            // If empty, show all countries & regions as default options
             if (!term) {
-                suggestionsDiv.classList.add('hidden');
+                const allRegions = Object.entries(REGION_COORDS);
+                const html = '<div class="px-3 py-2 bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase">Countries & Regions</div>' +
+                    allRegions.map(([code, data]) => `
+                        <div class="region-suggestion px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-b-0 transition" data-code="${code}">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white font-medium">${data.name}</span>
+                                <span class="text-slate-400 text-sm font-mono">${code}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                
+                suggestionsDiv.innerHTML = html;
+                suggestionsDiv.classList.remove('hidden');
+                
+                // Add click handlers
+                suggestionsDiv.querySelectorAll('.region-suggestion').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const code = this.dataset.code;
+                        document.getElementById('region-search').value = code;
+                        handleRegionSearch();
+                    });
+                });
                 return;
             }
             
@@ -1135,7 +1157,7 @@
             
             let html = '';
             
-            // Add region matches
+            // Add region matches first (prioritized at top)
             if (regionMatches.length > 0) {
                 html += '<div class="px-3 py-2 bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase">Countries & Regions</div>';
                 html += regionMatches.map(([code, data]) => `
@@ -1148,7 +1170,7 @@
                 `).join('');
             }
             
-            // Add hotspot matches
+            // Add hotspot matches below
             if (hotspotMatches.length > 0) {
                 html += '<div class="px-3 py-2 bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase mt-1">Hotspots</div>';
                 html += hotspotMatches.slice(0, 10).map(([code, data]) => `
@@ -1189,6 +1211,11 @@
         
         // Region search input - show suggestions as typing
         document.getElementById('region-search').addEventListener('input', function(e) {
+            showRegionSuggestions(e.target.value);
+        });
+        
+        // Region search input - show all countries/regions on focus
+        document.getElementById('region-search').addEventListener('focus', function(e) {
             showRegionSuggestions(e.target.value);
         });
         

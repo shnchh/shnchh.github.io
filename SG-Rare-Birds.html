@@ -332,11 +332,17 @@
         <!-- Region Search -->
         <div class="region-selector-container flex items-center gap-3 bg-slate-700/50 rounded-xl px-4 py-3 relative">
             <i class="fa-solid fa-globe text-slate-400"></i>
-            <input type="text" 
-                   id="region-search" 
-                   placeholder="Enter region code (e.g., US, US-CA, GB-ENG)" 
-                   class="bg-transparent text-white text-sm font-medium focus:outline-none w-64 placeholder-slate-500"
-                   title="Press Enter to search. Examples: SG, US, US-CA (California), GB-ENG (England)">
+            <div class="relative">
+                <input type="text" 
+                       id="region-search" 
+                       placeholder="Search region or enter code..." 
+                       class="bg-transparent text-white text-sm font-medium focus:outline-none w-64 placeholder-slate-500"
+                       autocomplete="off"
+                       title="Type to search regions or enter any eBird code (e.g., US-CA, GB-ENG)">
+                <!-- Autocomplete dropdown -->
+                <div id="region-suggestions" class="hidden absolute top-full left-0 mt-2 w-80 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-96 overflow-y-auto z-50">
+                </div>
+            </div>
             <button id="region-search-btn" class="text-slate-400 hover:text-white transition" title="Search region">
                 <i class="fa-solid fa-search"></i>
             </button>
@@ -814,6 +820,9 @@
                 return;
             }
             
+            // Hide suggestions
+            document.getElementById('region-suggestions').classList.add('hidden');
+            
             // Set the region code
             setRegionCode(code);
             
@@ -828,6 +837,56 @@
             }
         }
         
+        // Show region suggestions based on search input
+        function showRegionSuggestions(searchTerm) {
+            const suggestionsDiv = document.getElementById('region-suggestions');
+            const term = searchTerm.toLowerCase();
+            
+            if (!term) {
+                suggestionsDiv.classList.add('hidden');
+                return;
+            }
+            
+            // Filter regions by code or name
+            const matches = Object.entries(REGION_COORDS).filter(([code, data]) => {
+                return code.toLowerCase().includes(term) || 
+                       data.name.toLowerCase().includes(term);
+            });
+            
+            if (matches.length === 0) {
+                suggestionsDiv.innerHTML = '<div class="px-4 py-3 text-slate-400 text-sm">No matches. Enter any eBird region code (e.g., US-CA, GB-ENG)</div>';
+                suggestionsDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Build suggestions HTML
+            const html = matches.map(([code, data]) => `
+                <div class="region-suggestion px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-b-0 transition" data-code="${code}">
+                    <div class="flex justify-between items-center">
+                        <span class="text-white font-medium">${data.name}</span>
+                        <span class="text-slate-400 text-sm font-mono">${code}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            suggestionsDiv.innerHTML = html;
+            suggestionsDiv.classList.remove('hidden');
+            
+            // Add click handlers to suggestions
+            suggestionsDiv.querySelectorAll('.region-suggestion').forEach(item => {
+                item.addEventListener('click', function() {
+                    const code = this.dataset.code;
+                    document.getElementById('region-search').value = code;
+                    handleRegionSearch();
+                });
+            });
+        }
+        
+        // Region search input - show suggestions as typing
+        document.getElementById('region-search').addEventListener('input', function(e) {
+            showRegionSuggestions(e.target.value);
+        });
+        
         // Region search input - press Enter to search
         document.getElementById('region-search').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -837,6 +896,16 @@
         
         // Region search button click
         document.getElementById('region-search-btn').addEventListener('click', handleRegionSearch);
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            const searchInput = document.getElementById('region-search');
+            const suggestionsDiv = document.getElementById('region-suggestions');
+            
+            if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                suggestionsDiv.classList.add('hidden');
+            }
+        });
         
         // Set initial region search value
         document.getElementById('region-search').value = getRegionCode();

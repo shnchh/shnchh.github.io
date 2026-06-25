@@ -253,10 +253,14 @@ async function buildDashboard() {
       const depLabel = fmtSGT(nodeStart);
       const depWindowIdx = Math.max(0, (nodeStart - globalTStart) / WINDOW_SEC);
 
+      // Check if node is down (last 2 windows both 0%)
+      const recent = data.filter(d => d !== null).slice(-2);
+      const isDown = recent.length >= 2 && recent.every(d => d === 0);
+
       nodeCharts.push({
         node, displayName: `Node ${num} (${node})`, depLabel, depWindowIdx,
         data, blackout, color: COLORS[idx % COLORS.length],
-        nWindows: nTotal, validWindows: validWin, blackoutCount, avgPct
+        nWindows: nTotal, validWindows: validWin, blackoutCount, avgPct, isDown
       });
     });
 
@@ -306,7 +310,7 @@ async function buildDashboard() {
       html += `
 <div class="chart-wrapper">
   <div class="header-row">
-    <h2 style="color:${nc.color}">${nc.displayName}</h2>
+    <h2 style="color:${nc.color}">${nc.displayName}${nc.isDown ? ' <span style="color:#c62828;font-size:0.7em;vertical-align:middle;">DOWN</span>' : ''}</h2>
     <button class="snap-btn" onclick="snapToDeployment(${nc.depWindowIdx})">Snap to deploy time</button>
   </div>
   <div class="meta">Deployed: ${nc.depLabel} SGT | Valid windows: ${nc.validWindows} (excl. ${nc.blackoutCount} blackout) | Avg Availability: <span class="${cls}">${nc.avgPct.toFixed(1)}%</span></div>

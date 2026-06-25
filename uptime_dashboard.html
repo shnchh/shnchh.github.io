@@ -268,18 +268,19 @@ async function buildDashboard() {
     // Sink uptime
     const totalPossWin = allPossible.size;
     const sinkUptime = {
-      EBB0: Math.round(sink1Win.size / totalPossWin * 1000) / 10,
-      '1F18': Math.round(sink2Win.size / totalPossWin * 1000) / 10,
+      EBB0: totalPossWin > 0 ? Math.round(sink1Win.size / totalPossWin * 1000) / 10 : 0,
+      '1F18': totalPossWin > 0 ? Math.round(sink2Win.size / totalPossWin * 1000) / 10 : 0,
     };
+    console.log('Sink debug:', {sink1Size: sink1Win.size, sink2Size: sink2Win.size, totalPossWin, sinkUptime});
 
     // Map markers
     const mapMarkers = [];
     Object.entries(nodeCoords).forEach(([nid, info]) => {
       if (info.isSink) {
-        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Sink ${info.num.replace('SINK_NODE_','')} (${nid})`, uptime: sinkUptime[nid]||0, isSink: true });
+        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Sink ${info.num.replace('SINK_NODE_','')} (${nid})`, uptime: sinkUptime[nid]||0, isSink: true, color: '#0044cc' });
       } else {
-        const up = nodeCharts.find(nc => nc.node === nid);
-        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Node ${info.num} (${nid})`, uptime: up ? Math.round(up.avgPct*10)/10 : 0, isSink: false });
+        const nc = nodeCharts.find(nc => nc.node === nid);
+        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Node ${info.num} (${nid})`, uptime: nc ? Math.round(nc.avgPct*10)/10 : 0, isSink: false, color: nc ? nc.color : '#999' });
       }
     });
 
@@ -345,12 +346,11 @@ async function buildDashboard() {
     }
 
     mapMarkers.forEach(m => {
-      const color = uptimeColor(m.uptime);
       if (m.isSink) {
-        L.circleMarker([m.lat, m.lon], { radius: 12, color: '#0044cc', fillColor: color, fillOpacity: 0.8, weight: 3 })
+        L.circleMarker([m.lat, m.lon], { radius: 12, color: m.color, fillColor: m.color, fillOpacity: 0.8, weight: 0 })
           .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -12] });
       } else {
-        L.circle([m.lat, m.lon], { radius: 30, color: color, fillColor: color, fillOpacity: 0.45, weight: 3 })
+        L.circle([m.lat, m.lon], { radius: 30, color: m.color, fillColor: m.color, fillOpacity: 0.6, weight: 0 })
           .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -20] });
       }
     });

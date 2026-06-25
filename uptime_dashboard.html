@@ -112,7 +112,8 @@ function parseCSV(text) {
 }
 
 async function fetchSheetCSV(sheetId) {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+  // Use gviz endpoint — supports CORS from cross-origin pages (unlike /export which redirects)
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Failed to fetch sheet ${sheetId}: ${resp.status}`);
   return parseCSV(await resp.text());

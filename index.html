@@ -161,6 +161,18 @@ async function buildDashboard() {
     sheet1.forEach(r => { r['Sink Node'] = 'Sink 1'; });
     sheet2.forEach(r => { r['Sink Node'] = 'Sink 2'; });
     const allRaw = sheet1.concat(sheet2);
+
+    // Track latest sink per node using RAW timestamps (before 15A4 offset)
+    const latestSink = {};
+    allRaw.forEach(r => {
+      const src = (r['Source Node']||'').trim();
+      const ts = parseInt(r['Timestamp (Unix)']);
+      const sink = (r['Sink Node']||'').trim();
+      if (src && sink && (!latestSink[src] || ts > latestSink[src].ts)) {
+        latestSink[src] = { ts, sink };
+      }
+    });
+
     allRaw.forEach(r => {
       if ((r['Source Node'] || '').trim() === '15A4') {
         r['Timestamp (Unix)'] = String(parseInt(r['Timestamp (Unix)']) + NODE_15A4_OFFSET);
@@ -218,9 +230,8 @@ async function buildDashboard() {
     const tMax = non15a4Ts.length ? arrMax(non15a4Ts) : arrMax(timestamps);
     const tEnd = (Math.floor(tMax / WINDOW_SEC) + 1) * WINDOW_SEC;
 
-    // Activity map + track latest sink per node
+    // Activity map
     const activity = {};
-    const latestSink = {}; // node -> { ts, sink }
     unique.forEach(r => {
       const src = (r['Source Node']||'').trim();
       const ts = parseInt(r['Timestamp (Unix)']);
@@ -229,11 +240,6 @@ async function buildDashboard() {
       if (!activity[src]) activity[src] = {};
       if (!activity[src][wt]) activity[src][wt] = new Set();
       activity[src][wt].add(sw);
-      // Track which sink this node most recently sent to
-      const sink = (r['Sink Node']||'').trim();
-      if (sink && (!latestSink[src] || ts > latestSink[src].ts)) {
-        latestSink[src] = { ts, sink };
-      }
     });
 
     // Global axis

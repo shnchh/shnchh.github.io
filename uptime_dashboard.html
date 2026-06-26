@@ -284,7 +284,9 @@ async function buildDashboard() {
     const mapMarkers = [];
     Object.entries(nodeCoords).forEach(([nid, info]) => {
       if (info.isSink) {
-        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Sink ${info.num.replace('SINK_NODE_','')} (${nid})`, uptime: sinkUptime[nid]||0, isSink: true, color: '#0044cc' });
+        const pct = sinkUptime[nid];
+        console.log('Sink marker lookup:', {nid, pct, keys: Object.keys(sinkUptime)});
+        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Sink ${info.num.replace('SINK_NODE_','')} (${nid})`, uptime: pct !== undefined ? pct : -1, isSink: true, color: '#0044cc' });
       } else {
         const nc = nodeCharts.find(nc => nc.node === nid);
         mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Node ${info.num} (${nid})`, uptime: nc ? Math.round(nc.avgPct*10)/10 : 0, isSink: false, color: nc ? nc.color : '#999' });

@@ -57,7 +57,6 @@ const SHEET1_ID = '1aA0NgYzl1-P2cEh2VGXSz_0LoxKelR1_Vr-SkVbBcZ4';
 const SHEET2_ID = '1HetOooULPsFL3K3a5ngvBrVHYmdjwkKeJ22DYRG2U08';
 const WINDOW_SEC = 15 * 60;
 const BUGGY_THRESHOLD = 1767225600;
-const NODE_15A4_OFFSET = 3683768409;
 const EXPECTED_SCANS = 90;
 const REFRESH_MS = 15 * 60 * 1000;
 const SGT_OFFSET = 8 * 60 * 60 * 1000; // +8h in ms
@@ -157,12 +156,30 @@ async function buildDashboard() {
       }
     });
 
-    // Tag sink & fix 15A4
+    // Tag sink & fix 15A4 timestamps (use previous non-15A4 row's timestamp per sheet)
     sheet1.forEach(r => { r['Sink Node'] = 'Sink 1'; });
     sheet2.forEach(r => { r['Sink Node'] = 'Sink 2'; });
+
+    function fix15A4Timestamps(rows) {
+      let lastGoodTs = null;
+      rows.forEach(r => {
+        const src = (r['Source Node']||'').trim();
+        const ts = parseInt(r['Timestamp (Unix)']);
+        if (src === '15A4') {
+          if (lastGoodTs !== null) {
+            r['Timestamp (Unix)'] = String(lastGoodTs);
+          }
+        } else if (ts >= BUGGY_THRESHOLD) {
+          lastGoodTs = ts;
+        }
+      });
+    }
+    fix15A4Timestamps(sheet1);
+    fix15A4Timestamps(sheet2);
+
     const allRaw = sheet1.concat(sheet2);
 
-    // Track latest sink per node using RAW timestamps (before 15A4 offset)
+    // Track latest sink per node (15A4 timestamps are now corrected)
     const latestSink = {};
     allRaw.forEach(r => {
       const src = (r['Source Node']||'').trim();
@@ -170,12 +187,6 @@ async function buildDashboard() {
       const sink = (r['Sink Node']||'').trim();
       if (src && sink && (!latestSink[src] || ts > latestSink[src].ts)) {
         latestSink[src] = { ts, sink };
-      }
-    });
-
-    allRaw.forEach(r => {
-      if ((r['Source Node'] || '').trim() === '15A4') {
-        r['Timestamp (Unix)'] = String(parseInt(r['Timestamp (Unix)']) + NODE_15A4_OFFSET);
       }
     });
 

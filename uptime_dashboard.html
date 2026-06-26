@@ -163,10 +163,11 @@ async function buildDashboard() {
       }
     });
 
-    // Active windows per sink (after 15A4 fix)
+    // Active windows per sink (after 15A4 fix, excluding 15A4 from window range)
     function getActiveWindows(rows) {
       const wins = new Set();
       rows.forEach(r => {
+        if ((r['Source Node'] || '').trim() === '15A4') return;
         const ts = parseInt(r['Timestamp (Unix)']);
         if (ts >= BUGGY_THRESHOLD) wins.add(Math.floor(ts / WINDOW_SEC) * WINDOW_SEC);
       });

@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Live Node Uptime Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -24,6 +26,8 @@
   .chart-container { position: relative; width: 100%; height: 150px; }
   .snap-btn { background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; padding: 4px 10px; font-size: 0.8em; cursor: pointer; color: #444; }
   .snap-btn:hover { background: #ddd; }
+  .reset-btn { background: #fff3e0; border: 1px solid #e65100; border-radius: 4px; padding: 4px 10px; font-size: 0.8em; cursor: pointer; color: #e65100; margin-left: 8px; }
+  .reset-btn:hover { background: #ffe0b2; }
   .summary { max-width: 1400px; margin: 30px auto; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
   table { width: 100%; border-collapse: collapse; }
   th, td { padding: 8px 12px; border: 1px solid #ddd; text-align: center; }
@@ -315,10 +319,12 @@ async function buildDashboard() {
 <div style="max-width:1400px; margin:10px auto; background:#fff; border-radius:8px; padding:15px 20px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
   <label style="font-weight:bold; color:#333;">Time Range: </label>
   <span id="rangeLabel" style="color:#555; font-size:0.9em;"></span>
+  <button class="reset-btn" onclick="resetZoom()">Reset zoom</button>
   <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
     <input type="range" id="rangeStart" min="0" style="flex:1;" value="0">
     <input type="range" id="rangeEnd" style="flex:1;" value="0">
   </div>
+  <div style="color:#888; font-size:0.8em; margin-top:4px;">Drag on any chart to zoom in</div>
 </div>`;
 
     nodeCharts.forEach((nc, i) => {
@@ -396,7 +402,14 @@ async function buildDashboard() {
           responsive: true, maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
-            tooltip: { filter: item => item.datasetIndex === 0, callbacks: { label: ctx => ctx.raw + '% availability' } }
+            tooltip: { filter: item => item.datasetIndex === 0, callbacks: { label: ctx => ctx.raw + '% availability' } },
+            zoom: {
+              zoom: {
+                drag: { enabled: true, backgroundColor: 'rgba(66,133,244,0.15)', borderColor: '#4285f4', borderWidth: 1 },
+                mode: 'x',
+                onZoomComplete: ({chart}) => { syncSlidersFromChart(chart); }
+              }
+            }
           },
           scales: {
             x: { ticks: { color: '#666', maxTicksLimit: 15, maxRotation: 45 }, grid: { color: '#eee' }, min: 0, max: globalNWindows - 1 },
@@ -427,6 +440,27 @@ async function buildDashboard() {
     rangeStart.addEventListener('input', updateRange);
     rangeEnd.addEventListener('input', updateRange);
     rangeLabel.textContent = globalLabels[0] + '  \u2192  ' + globalLabels[globalNWindows-1] + ' SGT';
+
+    // Sync sliders when drag-zooming on any chart
+    function syncSlidersFromChart(chart) {
+      const xScale = chart.scales.x;
+      const s = Math.round(xScale.min);
+      const e = Math.round(xScale.max);
+      rangeStart.value = s;
+      rangeEnd.value = e;
+      rangeLabel.textContent = globalLabels[s] + '  \u2192  ' + globalLabels[e] + ' SGT';
+      // Sync all other charts to same range
+      allCharts.forEach(c => {
+        if (c !== chart) { c.options.scales.x.min = s; c.options.scales.x.max = e; c.update('none'); }
+      });
+    }
+
+    window.resetZoom = function() {
+      rangeStart.value = 0;
+      rangeEnd.value = globalNWindows - 1;
+      rangeLabel.textContent = globalLabels[0] + '  \u2192  ' + globalLabels[globalNWindows-1] + ' SGT';
+      allCharts.forEach(c => { c.options.scales.x.min = 0; c.options.scales.x.max = globalNWindows - 1; c.update('none'); });
+    };
 
     window.snapToDeployment = function(idx) { rangeStart.value = idx; updateRange.call(rangeStart); };
 

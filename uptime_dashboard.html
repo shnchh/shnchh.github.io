@@ -97,6 +97,12 @@ function fmtSGT(unix) {
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
+// Safe min/max for large arrays and Sets (avoids call stack overflow)
+function arrMin(arr) { return arr.reduce((a, b) => a < b ? a : b, Infinity); }
+function arrMax(arr) { return arr.reduce((a, b) => a > b ? a : b, -Infinity); }
+function setMin(s) { let m = Infinity; for (const v of s) if (v < m) m = v; return m; }
+function setMax(s) { let m = -Infinity; for (const v of s) if (v > m) m = v; return m; }
+
 function parseCSV(text) {
   const lines = text.split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
@@ -175,8 +181,8 @@ async function buildDashboard() {
       document.getElementById('error-msg').style.display = 'block';
       return;
     }
-    const gStart = Math.min(...allSinkWin);
-    const gEnd = Math.max(...allSinkWin) + WINDOW_SEC;
+    const gStart = setMin(allSinkWin);
+    const gEnd = setMax(allSinkWin) + WINDOW_SEC;
     const allPossible = new Set();
     for (let t = gStart; t < gEnd; t += WINDOW_SEC) allPossible.add(t);
     const bothDown = new Set([...allPossible].filter(t => !allSinkWin.has(t)));
@@ -203,7 +209,8 @@ async function buildDashboard() {
 
     const timestamps = unique.map(r => parseInt(r['Timestamp (Unix)']));
     const non15a4Ts = unique.filter(r => (r['Source Node']||'').trim() !== '15A4').map(r => parseInt(r['Timestamp (Unix)']));
-    const tMax = non15a4Ts.length ? Math.max(...non15a4Ts) : Math.max(...timestamps);
+    const minTs = arrMin(timestamps);
+    const tMax = non15a4Ts.length ? arrMax(non15a4Ts) : arrMax(timestamps);
     const tEnd = (Math.floor(tMax / WINDOW_SEC) + 1) * WINDOW_SEC;
 
     // Activity map
@@ -219,8 +226,8 @@ async function buildDashboard() {
     });
 
     // Global axis
-    const activeDepTimes = nodes.map(n => deploymentTimes[n] || Math.min(...timestamps));
-    const globalTStart = Math.floor(Math.min(...activeDepTimes) / WINDOW_SEC) * WINDOW_SEC;
+    const activeDepTimes = nodes.map(n => deploymentTimes[n] || minTs);
+    const globalTStart = Math.floor(arrMin(activeDepTimes) / WINDOW_SEC) * WINDOW_SEC;
     const globalNWindows = (tEnd - globalTStart) / WINDOW_SEC;
 
     const globalLabels = [];
@@ -231,7 +238,7 @@ async function buildDashboard() {
     // Per-node chart data
     const nodeCharts = [];
     nodes.forEach((node, idx) => {
-      const depTs = deploymentTimes[node] || Math.min(...timestamps);
+      const depTs = deploymentTimes[node] || minTs;
       const nodeStart = Math.floor(depTs / WINDOW_SEC) * WINDOW_SEC;
       const data = [], blackout = [];
       let totalPct = 0, validWin = 0;

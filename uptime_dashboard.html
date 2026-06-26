@@ -279,18 +279,22 @@ async function buildDashboard() {
       EBB0: totalPossWin > 0 ? Math.round(sink1Win.size / totalPossWin * 1000) / 10 : 0,
       '1F18': totalPossWin > 0 ? Math.round(sink2Win.size / totalPossWin * 1000) / 10 : 0,
     };
-    console.log('Sink debug:', {sink1Size: sink1Win.size, sink2Size: sink2Win.size, totalPossWin, sinkUptime});
 
     // Map markers
+    function statusColor(pct) {
+      if (pct >= 80) return '#2e7d32';
+      if (pct >= 50) return '#e65100';
+      return '#c62828';
+    }
     const mapMarkers = [];
     Object.entries(nodeCoords).forEach(([nid, info]) => {
       if (info.isSink) {
-        const pct = sinkUptime[nid];
-        console.log('Sink marker lookup:', {nid, pct, keys: Object.keys(sinkUptime)});
-        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Sink ${info.num.replace('SINK_NODE_','')} (${nid})`, uptime: pct !== undefined ? pct : -1, isSink: true, color: '#0044cc' });
+        const pct = sinkUptime[nid] || 0;
+        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Sink ${info.num.replace('SINK_NODE_','')} (${nid})`, uptime: pct, isSink: true, color: statusColor(pct) });
       } else {
         const nc = nodeCharts.find(nc => nc.node === nid);
-        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Node ${info.num} (${nid})`, uptime: nc ? Math.round(nc.avgPct*10)/10 : 0, isSink: false, color: nc ? nc.color : '#999' });
+        const pct = nc ? Math.round(nc.avgPct*10)/10 : 0;
+        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Node ${info.num} (${nid})`, uptime: pct, isSink: false, color: statusColor(pct) });
       }
     });
 
@@ -357,7 +361,7 @@ async function buildDashboard() {
 
     mapMarkers.forEach(m => {
       if (m.isSink) {
-        L.circleMarker([m.lat, m.lon], { radius: 12, color: m.color, fillColor: m.color, fillOpacity: 0.8, weight: 0 })
+        L.circleMarker([m.lat, m.lon], { radius: 12, color: '#5bc0de', fillColor: m.color, fillOpacity: 0.8, weight: 3 })
           .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -12] });
       } else {
         L.circle([m.lat, m.lon], { radius: 30, color: m.color, fillColor: m.color, fillOpacity: 0.6, weight: 0 })

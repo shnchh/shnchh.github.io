@@ -263,13 +263,13 @@ async function buildDashboard() {
       globalLabels.push(fmtSGT(globalTStart + i * WINDOW_SEC));
     }
 
-    // Per-node chart data
+    // Per-node chart data (instantaneous: online/offline per window)
     const nodeCharts = [];
     nodes.forEach((node, idx) => {
       const depTs = deploymentTimes[node] || minTs;
       const nodeStart = Math.floor(depTs / WINDOW_SEC) * WINDOW_SEC;
       const data = [], blackout = [];
-      let totalPct = 0, validWin = 0;
+      let onlineWin = 0, validWin = 0;
 
       for (let i = 0; i < globalNWindows; i++) {
         const wt = globalTStart + i * WINDOW_SEC;
@@ -277,12 +277,12 @@ async function buildDashboard() {
         const isBlack = bothDown.has(wt);
         blackout.push(isBlack ? 100 : null);
         const scans = activity[node] && activity[node][wt] ? activity[node][wt].size : 0;
-        const pct = Math.min(100, Math.round(scans / EXPECTED_SCANS * 1000) / 10);
-        data.push(pct);
-        if (!isBlack) { totalPct += pct; validWin++; }
+        const isOnline = scans > 0 ? 100 : 0;
+        data.push(isOnline);
+        if (!isBlack) { validWin++; if (scans > 0) onlineWin++; }
       }
 
-      const avgPct = validWin > 0 ? totalPct / validWin : 0;
+      const avgPct = validWin > 0 ? Math.round(onlineWin / validWin * 1000) / 10 : 0;
       const nTotal = data.filter(d => d !== null).length;
       const blackoutCount = nTotal - validWin;
       const num = nodeNumbers[node] || '?';
@@ -339,7 +339,7 @@ async function buildDashboard() {
         mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Sink ${info.num.replace('SINK_NODE_','')} (${nid})`, uptime: pct, isSink: true, color: statusColor(pct) });
       } else {
         const nc = nodeCharts.find(nc => nc.node === nid);
-        const pct = nc ? Math.round(nc.avgPct*10)/10 : 0;
+        const pct = nc ? nc.avgPct : 0;
         mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Node ${info.num} (${nid})`, uptime: pct, isSink: false, color: statusColor(pct) });
       }
     });
@@ -350,7 +350,7 @@ async function buildDashboard() {
     let html = `
 <h1>Mesh Network Uptime Dashboard</h1>
 <p class="info">Trial period: ${fmtSGT(TRIAL_START)} \u2192 ${fmtSGT(TRIAL_END)} SGT | Last refreshed: ${nowStr} SGT | Auto-refreshes every 15 min</p>
-<p class="info">15-minute windows | Availability = scan windows received / 90 expected per period</p>
+<p class="info">15-minute windows | Uptime = % of windows where node was online (received any data)</p>
 <p class="legend-info">
   <span class="swatch" style="background: repeating-linear-gradient(45deg, #999, #999 2px, #ddd 2px, #ddd 4px);"></span>
   Hatched areas = both sink nodes down (excluded from mesh node uptime calculation)
@@ -389,13 +389,13 @@ async function buildDashboard() {
     <h2 style="color:${nc.color}">${nc.displayName}${nc.isDown ? ' <span style="color:#c62828;font-size:0.7em;vertical-align:middle;">DOWN</span>' : ''}</h2>
     <button class="snap-btn" onclick="snapToDeployment(${nc.depWindowIdx})">Snap to deploy time</button>
   </div>
-  <div class="meta">Deployed: ${nc.depLabel} SGT | Sending to: <strong>${nc.currentSink}</strong> | Valid windows: ${nc.validWindows} (excl. ${nc.blackoutCount} blackout) | Avg Availability: <span class="${cls}">${nc.avgPct.toFixed(1)}%</span></div>
+  <div class="meta">Deployed: ${nc.depLabel} SGT | Sending to: <strong>${nc.currentSink}</strong> | Valid windows: ${nc.validWindows} (excl. ${nc.blackoutCount} blackout) | Uptime: <span class="${cls}">${nc.avgPct.toFixed(1)}%</span></div>
   <div class="chart-container"><canvas id="chart${i}"></canvas></div>
 </div>`;
     });
 
     html += `<div class="summary"><h2>Summary</h2><table>
-<tr><th>Node</th><th>Deployed</th><th>Valid Windows</th><th>Blackout Windows</th><th>Avg Availability</th></tr>`;
+<tr><th>Node</th><th>Deployed</th><th>Valid Windows</th><th>Blackout Windows</th><th>Uptime</th></tr>`;
     nodeCharts.forEach(nc => {
       const cls = nc.avgPct >= 80 ? 'good' : (nc.avgPct >= 50 ? 'warn' : 'bad');
       html += `<tr><td>${nc.displayName}</td><td>${nc.depLabel}</td><td>${nc.validWindows}</td><td>${nc.blackoutCount}</td><td class="${cls}">${nc.avgPct.toFixed(1)}%</td></tr>`;
@@ -422,10 +422,10 @@ async function buildDashboard() {
     mapMarkers.forEach(m => {
       if (m.isSink) {
         L.circleMarker([m.lat, m.lon], { radius: 12, color: '#5bc0de', fillColor: m.color, fillOpacity: 0.8, weight: 3 })
-          .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -12] });
+          .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime.toFixed(1) + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -12] });
       } else {
         L.circle([m.lat, m.lon], { radius: 30, color: m.color, fillColor: m.color, fillOpacity: 0.6, weight: 0 })
-          .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -20] });
+          .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime.toFixed(1) + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -20] });
       }
     });
 
@@ -491,7 +491,7 @@ async function buildDashboard() {
           responsive: true, maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
-            tooltip: { filter: item => item.datasetIndex === 0, callbacks: { label: ctx => ctx.raw + '% availability' } },
+            tooltip: { filter: item => item.datasetIndex === 0, callbacks: { label: ctx => ctx.raw === 100 ? 'Online' : 'Offline' } },
             zoom: {
               zoom: {
                 drag: { enabled: true, backgroundColor: 'rgba(66,133,244,0.15)', borderColor: '#4285f4', borderWidth: 1 },
@@ -502,7 +502,7 @@ async function buildDashboard() {
           },
           scales: {
             x: { ticks: { color: '#666', maxTicksLimit: 15, maxRotation: 45 }, grid: { color: '#eee' }, min: 0, max: globalNWindows - 1 },
-            y: { min: 0, max: 100, ticks: { color: '#666', callback: v => v + '%', stepSize: 50 }, grid: { color: '#eee' } }
+            y: { min: 0, max: 100, ticks: { color: '#666', callback: v => v === 100 ? 'Online' : v === 0 ? 'Offline' : '', stepSize: 100 }, grid: { color: '#eee' } }
           }
         }
       });

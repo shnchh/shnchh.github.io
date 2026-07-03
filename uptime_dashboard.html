@@ -57,7 +57,6 @@ const SHEET1_ID = '1aA0NgYzl1-P2cEh2VGXSz_0LoxKelR1_Vr-SkVbBcZ4';
 const SHEET2_ID = '1HetOooULPsFL3K3a5ngvBrVHYmdjwkKeJ22DYRG2U08';
 const WINDOW_SEC = 15 * 60;
 const BUGGY_THRESHOLD = 1767225600;
-const NODE_15A4_OFFSET = 3683768409;
 const EXPECTED_SCANS = 90;
 const REFRESH_MS = 15 * 60 * 1000;
 const SGT_OFFSET = 8 * 60 * 60 * 1000; // +8h in ms
@@ -157,13 +156,37 @@ async function buildDashboard() {
       }
     });
 
-    // Tag sink & fix 15A4
+    // Tag sink & fix 15A4 timestamps (use previous non-15A4 row's timestamp per sheet)
     sheet1.forEach(r => { r['Sink Node'] = 'Sink 1'; });
     sheet2.forEach(r => { r['Sink Node'] = 'Sink 2'; });
+
+    function fix15A4Timestamps(rows) {
+      let lastGoodTs = null;
+      rows.forEach(r => {
+        const src = (r['Source Node']||'').trim();
+        const ts = parseInt(r['Timestamp (Unix)']);
+        if (src === '15A4') {
+          if (lastGoodTs !== null) {
+            r['Timestamp (Unix)'] = String(lastGoodTs);
+          }
+        } else if (ts >= BUGGY_THRESHOLD) {
+          lastGoodTs = ts;
+        }
+      });
+    }
+    fix15A4Timestamps(sheet1);
+    fix15A4Timestamps(sheet2);
+
     const allRaw = sheet1.concat(sheet2);
+
+    // Track latest sink per node (15A4 timestamps are now corrected)
+    const latestSink = {};
     allRaw.forEach(r => {
-      if ((r['Source Node'] || '').trim() === '15A4') {
-        r['Timestamp (Unix)'] = String(parseInt(r['Timestamp (Unix)']) + NODE_15A4_OFFSET);
+      const src = (r['Source Node']||'').trim();
+      const ts = parseInt(r['Timestamp (Unix)']);
+      const sink = (r['Sink Node']||'').trim();
+      if (src && sink && (!latestSink[src] || ts > latestSink[src].ts)) {
+        latestSink[src] = { ts, sink };
       }
     });
 
@@ -270,10 +293,11 @@ async function buildDashboard() {
       const recent = data.filter(d => d !== null).slice(-2);
       const isDown = recent.length >= 2 && recent.every(d => d === 0);
 
+      const currentSink = latestSink[node] ? latestSink[node].sink : 'Unknown';
       nodeCharts.push({
         node, displayName: `Node ${num} (${node})`, depLabel, depWindowIdx,
         data, blackout, color: COLORS[idx % COLORS.length],
-        nWindows: nTotal, validWindows: validWin, blackoutCount, avgPct, isDown
+        nWindows: nTotal, validWindows: validWin, blackoutCount, avgPct, isDown, currentSink
       });
     });
 
@@ -335,7 +359,7 @@ async function buildDashboard() {
     <h2 style="color:${nc.color}">${nc.displayName}${nc.isDown ? ' <span style="color:#c62828;font-size:0.7em;vertical-align:middle;">DOWN</span>' : ''}</h2>
     <button class="snap-btn" onclick="snapToDeployment(${nc.depWindowIdx})">Snap to deploy time</button>
   </div>
-  <div class="meta">Deployed: ${nc.depLabel} SGT | Valid windows: ${nc.validWindows} (excl. ${nc.blackoutCount} blackout) | Avg Availability: <span class="${cls}">${nc.avgPct.toFixed(1)}%</span></div>
+  <div class="meta">Deployed: ${nc.depLabel} SGT | Sending to: <strong>${nc.currentSink}</strong> | Valid windows: ${nc.validWindows} (excl. ${nc.blackoutCount} blackout) | Avg Availability: <span class="${cls}">${nc.avgPct.toFixed(1)}%</span></div>
   <div class="chart-container"><canvas id="chart${i}"></canvas></div>
 </div>`;
     });
@@ -462,7 +486,13 @@ async function buildDashboard() {
       allCharts.forEach(c => { c.options.scales.x.min = 0; c.options.scales.x.max = globalNWindows - 1; c.update('none'); });
     };
 
-    window.snapToDeployment = function(idx) { rangeStart.value = idx; updateRange.call(rangeStart); };
+    window.snapToDeployment = function(idx) {
+      const e = globalNWindows - 1;
+      rangeStart.value = idx;
+      rangeEnd.value = e;
+      rangeLabel.textContent = globalLabels[idx] + '  \u2192  ' + globalLabels[e] + ' SGT';
+      allCharts.forEach(c => { c.options.scales.x.min = idx; c.options.scales.x.max = e; c.update('none'); });
+    };
 
   } catch (err) {
     document.getElementById('loading').style.display = 'none';

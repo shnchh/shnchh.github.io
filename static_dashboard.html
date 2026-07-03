@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Live Node Uptime Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 20px; background: #e0e0e0; color: #222; }
+  h1 { text-align: center; color: #222; }
+  .info { text-align: center; color: #555; margin-bottom: 20px; }
+  .live-badge { display: inline-block; background: #2e7d32; color: #fff; border-radius: 12px; padding: 3px 12px; font-size: 0.8em; margin-left: 10px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .legend-info { text-align: center; color: #555; margin-bottom: 20px; font-size: 0.9em; }
+  .legend-info span.swatch { display: inline-block; width: 18px; height: 12px; vertical-align: middle; margin-right: 4px; border: 1px solid #999; }
+  .map-wrapper { max-width: 1400px; margin: 20px auto; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  #map { width: 100%; height: 500px; border-radius: 6px; }
+  .node-label { background: rgba(255,255,255,0.9); border: none; border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: bold; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  .chart-wrapper { max-width: 1400px; margin: 20px auto; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .chart-wrapper .header-row { display: flex; justify-content: space-between; align-items: center; }
+  .chart-wrapper h2 { margin: 0 0 5px 0; color: #333; }
+  .chart-wrapper .meta { color: #666; font-size: 0.9em; margin-bottom: 10px; }
+  .chart-container { position: relative; width: 100%; height: 150px; }
+  .snap-btn { background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; padding: 4px 10px; font-size: 0.8em; cursor: pointer; color: #444; }
+  .snap-btn:hover { background: #ddd; }
+  .reset-btn { background: #fff3e0; border: 1px solid #e65100; border-radius: 4px; padding: 4px 10px; font-size: 0.8em; cursor: pointer; color: #e65100; margin-left: 8px; }
+  .reset-btn:hover { background: #ffe0b2; }
+  .summary { max-width: 1400px; margin: 30px auto; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px 12px; border: 1px solid #ddd; text-align: center; }
+  th { background: #f5f5f5; }
+  .good { color: #2e7d32; font-weight: bold; }
+  .warn { color: #e65100; font-weight: bold; }
+  .bad { color: #c62828; font-weight: bold; }
+  #loading { text-align: center; font-size: 1.5em; color: #555; padding: 80px 20px; }
+  #loading .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid #ccc; border-top: 4px solid #333; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #dashboard { display: none; }
+  #error-msg { text-align: center; color: #c62828; font-size: 1.2em; padding: 40px; display: none; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div>Fetching live data from Google Sheets...</div>
+</div>
+<div id="error-msg"></div>
+<div id="dashboard"></div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const SHEET1_ID = '1aA0NgYzl1-P2cEh2VGXSz_0LoxKelR1_Vr-SkVbBcZ4';
+const SHEET2_ID = '1HetOooULPsFL3K3a5ngvBrVHYmdjwkKeJ22DYRG2U08';
+const WINDOW_SEC = 60;
+const BUGGY_THRESHOLD = 1767225600;
+const REFRESH_MS = 15 * 60 * 1000;
+const SGT_OFFSET = 8 * 60 * 60 * 1000; // +8h in ms
+const TRIAL_START = 1782097200; // 22 Jun 2026 11:00 SGT
+const TRIAL_END   = 1782786600; // 30 Jun 2026 10:30 SGT
+
+const COLORS = ['#e6194b','#3cb44b','#4363d8','#f58231','#911eb4',
+                '#42d4f4','#f032e6','#bfef45','#fabed4','#469990'];
+
+// ── Deployment Details (embedded) ──────────────────────────────────────────
+const DEPLOYMENT = [
+  {num:'1',  id:'B8B0', lat:1.3615,    lon:103.77796,  setup:'22/06/2026, 1130', isSink:false},
+  {num:'2',  id:'E95C', lat:1.36159,   lon:103.77706,  setup:'24/06/2026, 1455', isSink:false},
+  {num:'3',  id:'FC78', lat:1.36051,   lon:103.77797,  setup:'22/06/2026, 1148', isSink:false},
+  {num:'4',  id:'E9BC', lat:1.36005,   lon:103.77895,  setup:'23/06/2026, 1144', isSink:false},
+  {num:'5',  id:'15A4', lat:1.35945,   lon:103.77901,  setup:'23/06/2026, 1229', isSink:false},
+  {num:'6',  id:'1C',   lat:1.36151,   lon:103.77883,  setup:'23/06/2026, 1050', isSink:false},
+  {num:'7',  id:'ECE8', lat:1.36061,   lon:103.77879,  setup:'23/06/2026, 1111', isSink:false},
+  {num:'8',  id:'EB90', lat:1.3597083, lon:103.7779301, setup:'22/06/2026, 1130', isSink:false},
+  {num:'9',  id:'EE0C', lat:1.35889,   lon:103.77779,  setup:'22/06/2026, 1118', isSink:false},
+  {num:'10', id:'ECB4', lat:1.3590841, lon:103.777034,  setup:'24/06/2026, 1110', isSink:false},
+  {num:'SINK_NODE_1', id:'EBB0', lat:1.360613,  lon:103.7770333, setup:null, isSink:true},
+  {num:'SINK_NODE_2', id:'1F18', lat:1.3600167, lon:103.7769887, setup:null, isSink:true},
+];
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function parseSetupTime(s) {
+  // "22/06/2026, 1130" -> unix timestamp in SGT
+  const m = s.match(/(\d{2})\/(\d{2})\/(\d{4}),\s*(\d{2})(\d{2})/);
+  if (!m) return null;
+  const [, dd, mm, yyyy, hh, mi] = m;
+  const d = new Date(Date.UTC(+yyyy, +mm-1, +dd, +hh - 8, +mi)); // SGT to UTC
+  return Math.floor(d.getTime() / 1000);
+}
+
+function toSGT(unix) {
+  return new Date(unix * 1000 + SGT_OFFSET);
+}
+
+function fmtSGT(unix) {
+  const d = toSGT(unix);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+// Safe min/max for large arrays and Sets (avoids call stack overflow)
+function arrMin(arr) { return arr.reduce((a, b) => a < b ? a : b, Infinity); }
+function arrMax(arr) { return arr.reduce((a, b) => a > b ? a : b, -Infinity); }
+function setMin(s) { let m = Infinity; for (const v of s) if (v < m) m = v; return m; }
+function setMax(s) { let m = -Infinity; for (const v of s) if (v > m) m = v; return m; }
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    const row = {};
+    headers.forEach((h, j) => { row[h] = vals[j] || ''; });
+    rows.push(row);
+  }
+  return rows;
+}
+
+async function fetchSheetCSV(sheetId) {
+  // Use gviz endpoint — supports CORS from cross-origin pages (unlike /export which redirects)
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch sheet ${sheetId}: ${resp.status}`);
+  return parseCSV(await resp.text());
+}
+
+// ── Main pipeline ──────────────────────────────────────────────────────────
+async function buildDashboard() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('error-msg').style.display = 'none';
+
+  try {
+    // Fetch both sheets
+    const [sheet1, sheet2] = await Promise.all([
+      fetchSheetCSV(SHEET1_ID),
+      fetchSheetCSV(SHEET2_ID),
+    ]);
+
+    // Build deployment lookup
+    const deploymentTimes = {};
+    const nodeNumbers = {};
+    const nodeCoords = {};
+    DEPLOYMENT.forEach(d => {
+      if (!d.isSink && d.setup) {
+        const ts = parseSetupTime(d.setup);
+        if (ts) deploymentTimes[d.id] = ts;
+        nodeNumbers[d.id] = d.num;
+      }
+      if (d.lat && d.lon) {
+        nodeCoords[d.id] = { num: d.num, lat: d.lat, lon: d.lon, isSink: d.isSink };
+      }
+    });
+
+    // Tag sink & fix 15A4 timestamps (use previous non-15A4 row's timestamp per sheet)
+    sheet1.forEach(r => { r['Sink Node'] = 'Sink 1'; });
+    sheet2.forEach(r => { r['Sink Node'] = 'Sink 2'; });
+
+    function fix15A4Timestamps(rows) {
+      let lastGoodTs = null;
+      rows.forEach(r => {
+        const src = (r['Source Node']||'').trim();
+        const ts = parseInt(r['Timestamp (Unix)']);
+        if (src === '15A4') {
+          if (lastGoodTs !== null) {
+            r['Timestamp (Unix)'] = String(lastGoodTs);
+          }
+        } else if (ts >= BUGGY_THRESHOLD) {
+          lastGoodTs = ts;
+        }
+      });
+    }
+    fix15A4Timestamps(sheet1);
+    fix15A4Timestamps(sheet2);
+
+    const allRaw = sheet1.concat(sheet2);
+
+    // Track latest sink per node (15A4 timestamps are now corrected)
+    const latestSink = {};
+    allRaw.forEach(r => {
+      const src = (r['Source Node']||'').trim();
+      const ts = parseInt(r['Timestamp (Unix)']);
+      const sink = (r['Sink Node']||'').trim();
+      if (src && sink && (!latestSink[src] || ts > latestSink[src].ts)) {
+        latestSink[src] = { ts, sink };
+      }
+    });
+
+    // Active windows per sink (after 15A4 fix, excluding 15A4 from window range)
+    function getActiveWindows(rows) {
+      const wins = new Set();
+      rows.forEach(r => {
+        if ((r['Source Node'] || '').trim() === '15A4') return;
+        const ts = parseInt(r['Timestamp (Unix)']);
+        if (ts >= BUGGY_THRESHOLD) wins.add(Math.floor(ts / WINDOW_SEC) * WINDOW_SEC);
+      });
+      return wins;
+    }
+    const sink1Win = getActiveWindows(sheet1);
+    const sink2Win = getActiveWindows(sheet2);
+    const allSinkWin = new Set([...sink1Win, ...sink2Win]);
+    if (allSinkWin.size === 0) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-msg').textContent = 'No valid data found.';
+      document.getElementById('error-msg').style.display = 'block';
+      return;
+    }
+    // Fixed trial window
+    const gStart = Math.floor(TRIAL_START / WINDOW_SEC) * WINDOW_SEC;
+    const gEnd = Math.ceil(TRIAL_END / WINDOW_SEC) * WINDOW_SEC;
+    const allPossible = new Set();
+    for (let t = gStart; t < gEnd; t += WINDOW_SEC) allPossible.add(t);
+    const bothDown = new Set([...allPossible].filter(t => !allSinkWin.has(t)));
+
+    // Filter buggy, deployment, deduplicate
+    const good = allRaw.filter(r => parseInt(r['Timestamp (Unix)']) >= BUGGY_THRESHOLD);
+    const filtered = good.filter(r => {
+      const src = (r['Source Node'] || '').trim();
+      const ts = parseInt(r['Timestamp (Unix)']);
+      return src in deploymentTimes && ts >= deploymentTimes[src];
+    });
+
+    const seen = new Set();
+    const unique = [];
+    filtered.forEach(r => {
+      const key = [r['Source Node'], r['Tag ID'], r['Packet Num'], r['Scan Window Num'], r['Timestamp (Unix)']].map(v => (v||'').trim()).join('|');
+      if (!seen.has(key)) { seen.add(key); unique.push(r); }
+    });
+    unique.sort((a,b) => parseInt(a['Timestamp (Unix)']) - parseInt(b['Timestamp (Unix)']));
+
+    // Nodes sorted by number
+    const nodeSet = new Set(unique.map(r => r['Source Node']));
+    const nodes = [...nodeSet].sort((a,b) => parseInt(nodeNumbers[a]||'999') - parseInt(nodeNumbers[b]||'999'));
+
+    const timestamps = unique.map(r => parseInt(r['Timestamp (Unix)']));
+    const minTs = arrMin(timestamps);
+    const tEnd = gEnd;
+
+    // Activity map
+    const activity = {};
+    unique.forEach(r => {
+      const src = (r['Source Node']||'').trim();
+      const ts = parseInt(r['Timestamp (Unix)']);
+      const sw = (r['Scan Window Num']||'').trim();
+      const wt = Math.floor(ts / WINDOW_SEC) * WINDOW_SEC;
+      if (!activity[src]) activity[src] = {};
+      if (!activity[src][wt]) activity[src][wt] = new Set();
+      activity[src][wt].add(sw);
+    });
+
+    // Global axis (fixed to trial window)
+    const globalTStart = gStart;
+    const globalNWindows = (gEnd - gStart) / WINDOW_SEC;
+
+    const globalLabels = [];
+    for (let i = 0; i < globalNWindows; i++) {
+      globalLabels.push(fmtSGT(globalTStart + i * WINDOW_SEC));
+    }
+
+    // Per-node chart data (instantaneous: online/offline per window)
+    const nodeCharts = [];
+    nodes.forEach((node, idx) => {
+      const depTs = deploymentTimes[node] || minTs;
+      const nodeStart = Math.floor(depTs / WINDOW_SEC) * WINDOW_SEC;
+      const data = [], blackout = [];
+      let onlineWin = 0, validWin = 0;
+
+      for (let i = 0; i < globalNWindows; i++) {
+        const wt = globalTStart + i * WINDOW_SEC;
+        if (wt < nodeStart) { data.push(null); blackout.push(null); continue; }
+        const isBlack = bothDown.has(wt);
+        blackout.push(isBlack ? 100 : null);
+        const scans = activity[node] && activity[node][wt] ? activity[node][wt].size : 0;
+        const isOnline = scans > 0 ? 100 : 0;
+        data.push(isOnline);
+        if (!isBlack) { validWin++; if (scans > 0) onlineWin++; }
+      }
+
+      const avgPct = validWin > 0 ? Math.round(onlineWin / validWin * 1000) / 10 : 0;
+      const nTotal = data.filter(d => d !== null).length;
+      const blackoutCount = nTotal - validWin;
+      const num = nodeNumbers[node] || '?';
+      const depLabel = fmtSGT(nodeStart);
+      const depWindowIdx = Math.max(0, (nodeStart - globalTStart) / WINDOW_SEC);
+
+      // Check if node is down (last 2 windows both 0%)
+      const recent = data.filter(d => d !== null).slice(-2);
+      const isDown = recent.length >= 2 && recent.every(d => d === 0);
+
+      const currentSink = latestSink[node] ? latestSink[node].sink : 'Unknown';
+      nodeCharts.push({
+        node, displayName: `Node ${num} (${node})`, depLabel, depWindowIdx,
+        data, blackout, color: COLORS[idx % COLORS.length],
+        nWindows: nTotal, validWindows: validWin, blackoutCount, avgPct, isDown, currentSink
+      });
+    });
+
+    // Sink uptime (overall)
+    const totalPossWin = allPossible.size;
+    const sinkUptime = {
+      EBB0: totalPossWin > 0 ? Math.round(sink1Win.size / totalPossWin * 1000) / 10 : 0,
+      '1F18': totalPossWin > 0 ? Math.round(sink2Win.size / totalPossWin * 1000) / 10 : 0,
+    };
+
+    // Sink per-window chart data (receive activity per 15-min window)
+    const sinkCharts = [];
+    [{id:'EBB0', name:'Sink 1 (EBB0)', wins:sink1Win, color:'#1565c0'},
+     {id:'1F18', name:'Sink 2 (1F18)', wins:sink2Win, color:'#6a1b9a'}].forEach(sink => {
+      const data = [];
+      let totalPct = 0, validWin = 0;
+      for (let i = 0; i < globalNWindows; i++) {
+        const wt = globalTStart + i * WINDOW_SEC;
+        const hasData = sink.wins.has(wt);
+        const pct = hasData ? 100 : 0;
+        data.push(pct);
+        totalPct += pct;
+        validWin++;
+      }
+      const avgPct = validWin > 0 ? totalPct / validWin : 0;
+      sinkCharts.push({ id: sink.id, displayName: sink.name, data, color: sink.color, avgPct, validWindows: validWin });
+    });
+
+    // Map markers
+    function statusColor(pct) {
+      if (pct >= 80) return '#2e7d32';
+      if (pct >= 50) return '#e65100';
+      return '#c62828';
+    }
+    const mapMarkers = [];
+    Object.entries(nodeCoords).forEach(([nid, info]) => {
+      if (info.isSink) {
+        const pct = sinkUptime[nid] || 0;
+        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Sink ${info.num.replace('SINK_NODE_','')} (${nid})`, uptime: pct, isSink: true, color: statusColor(pct) });
+      } else {
+        const nc = nodeCharts.find(nc => nc.node === nid);
+        const pct = nc ? nc.avgPct : 0;
+        mapMarkers.push({ lat: info.lat, lon: info.lon, label: `Node ${info.num} (${nid})`, uptime: pct, isSink: false, color: statusColor(pct) });
+      }
+    });
+
+    // ── Render ──────────────────────────────────────────────────────────────
+    const nowStr = fmtSGT(Math.floor(Date.now()/1000));
+
+    let html = `
+<h1>Mesh Network Uptime Dashboard</h1>
+<p class="info">Trial period: ${fmtSGT(TRIAL_START)} \u2192 ${fmtSGT(TRIAL_END)} SGT | Last refreshed: ${nowStr} SGT | Auto-refreshes every 15 min</p>
+<p class="info">1-minute windows | Uptime = % of windows where node was online (received any data)</p>
+<p class="legend-info">
+  <span class="swatch" style="background: repeating-linear-gradient(45deg, #999, #999 2px, #ddd 2px, #ddd 4px);"></span>
+  Hatched areas = both sink nodes down (excluded from mesh node uptime calculation)
+</p>
+<div class="map-wrapper"><h2>Deployment Map</h2><div id="map"></div></div>
+
+<div style="max-width:1400px; margin:10px auto; background:#fff; border-radius:8px; padding:15px 20px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+  <label style="font-weight:bold; color:#333;">Time Range: </label>
+  <span id="rangeLabel" style="color:#555; font-size:0.9em;"></span>
+  <button class="reset-btn" onclick="resetZoom()">Reset zoom</button>
+  <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
+    <input type="range" id="rangeStart" min="0" style="flex:1;" value="0">
+    <input type="range" id="rangeEnd" style="flex:1;" value="0">
+  </div>
+  <div style="color:#888; font-size:0.8em; margin-top:4px;">Drag on any chart to zoom in</div>
+</div>`;
+
+    // Sink charts at the top
+    sinkCharts.forEach((sc, i) => {
+      const cls = sc.avgPct >= 80 ? 'good' : (sc.avgPct >= 50 ? 'warn' : 'bad');
+      html += `
+<div class="chart-wrapper">
+  <div class="header-row">
+    <h2 style="color:${sc.color}">${sc.displayName}</h2>
+  </div>
+  <div class="meta">Uptime: <span class="${cls}">${sc.avgPct.toFixed(1)}%</span> (${sc.validWindows} windows)</div>
+  <div class="chart-container"><canvas id="sinkChart${i}"></canvas></div>
+</div>`;
+    });
+
+    nodeCharts.forEach((nc, i) => {
+      const cls = nc.avgPct >= 80 ? 'good' : (nc.avgPct >= 50 ? 'warn' : 'bad');
+      html += `
+<div class="chart-wrapper">
+  <div class="header-row">
+    <h2 style="color:${nc.color}">${nc.displayName}${nc.isDown ? ' <span style="color:#c62828;font-size:0.7em;vertical-align:middle;">DOWN</span>' : ''}</h2>
+    <button class="snap-btn" onclick="snapToDeployment(${nc.depWindowIdx})">Snap to deploy time</button>
+  </div>
+  <div class="meta">Deployed: ${nc.depLabel} SGT | Sending to: <strong>${nc.currentSink}</strong> | Valid windows: ${nc.validWindows} (excl. ${nc.blackoutCount} blackout) | Uptime: <span class="${cls}">${nc.avgPct.toFixed(1)}%</span></div>
+  <div class="chart-container"><canvas id="chart${i}"></canvas></div>
+</div>`;
+    });
+
+    html += `<div class="summary"><h2>Summary</h2><table>
+<tr><th>Node</th><th>Deployed</th><th>Valid Windows</th><th>Blackout Windows</th><th>Uptime</th></tr>`;
+    nodeCharts.forEach(nc => {
+      const cls = nc.avgPct >= 80 ? 'good' : (nc.avgPct >= 50 ? 'warn' : 'bad');
+      html += `<tr><td>${nc.displayName}</td><td>${nc.depLabel}</td><td>${nc.validWindows}</td><td>${nc.blackoutCount}</td><td class="${cls}">${nc.avgPct.toFixed(1)}%</td></tr>`;
+    });
+    html += '</table></div>';
+
+    document.getElementById('loading').style.display = 'none';
+    const dashEl = document.getElementById('dashboard');
+    dashEl.innerHTML = html;
+    dashEl.style.display = 'block';
+
+    // ── Map ────────────────────────────────────────────────────────────────
+    const leafletMap = L.map('map').setView([1.3600, 103.7780], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 20,
+    }).addTo(leafletMap);
+
+    function uptimeColor(pct) {
+      const r = pct < 50 ? 255 : Math.round(255 - (pct - 50) * 5.1);
+      const g = pct < 50 ? Math.round(pct * 5.1) : 255;
+      return `rgb(${r},${g},0)`;
+    }
+
+    mapMarkers.forEach(m => {
+      if (m.isSink) {
+        L.circleMarker([m.lat, m.lon], { radius: 12, color: '#5bc0de', fillColor: m.color, fillOpacity: 0.8, weight: 3 })
+          .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime.toFixed(1) + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -12] });
+      } else {
+        L.circle([m.lat, m.lon], { radius: 30, color: m.color, fillColor: m.color, fillOpacity: 0.6, weight: 0 })
+          .addTo(leafletMap).bindTooltip(m.label + '<br>' + m.uptime.toFixed(1) + '% uptime', { permanent: true, direction: 'top', className: 'node-label', offset: [0, -20] });
+      }
+    });
+
+    // ── Hatch pattern ──────────────────────────────────────────────────────
+    const hatchCanvas = document.createElement('canvas');
+    hatchCanvas.width = 8; hatchCanvas.height = 8;
+    const hCtx = hatchCanvas.getContext('2d');
+    hCtx.strokeStyle = '#999'; hCtx.lineWidth = 1.5;
+    hCtx.beginPath(); hCtx.moveTo(0,8); hCtx.lineTo(8,0); hCtx.stroke();
+    hCtx.beginPath(); hCtx.moveTo(-2,2); hCtx.lineTo(2,-2); hCtx.stroke();
+    hCtx.beginPath(); hCtx.moveTo(6,10); hCtx.lineTo(10,6); hCtx.stroke();
+    const hatchPattern = hCtx.createPattern(hatchCanvas, 'repeat');
+
+    // ── Charts ─────────────────────────────────────────────────────────────
+    const allCharts = [];
+
+    // Sink charts
+    sinkCharts.forEach((sc, i) => {
+      const ctx = document.getElementById('sinkChart' + i).getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: globalLabels,
+          datasets: [
+            { label: 'Uptime', data: sc.data, borderColor: sc.color, backgroundColor: sc.color + '33', stepped: true, borderWidth: 1.5, pointRadius: 0, fill: true }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ctx.raw === 100 ? 'Online' : 'Offline' } },
+            zoom: {
+              zoom: {
+                drag: { enabled: true, backgroundColor: 'rgba(66,133,244,0.15)', borderColor: '#4285f4', borderWidth: 1 },
+                mode: 'x',
+                onZoomComplete: ({chart}) => { syncSlidersFromChart(chart); }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#666', maxTicksLimit: 15, maxRotation: 45 }, grid: { color: '#eee' }, min: 0, max: globalNWindows - 1 },
+            y: { min: 0, max: 100, ticks: { color: '#666', callback: v => v === 100 ? 'Online' : v === 0 ? 'Offline' : '', stepSize: 100 }, grid: { color: '#eee' } }
+          }
+        }
+      });
+      allCharts.push(chart);
+    });
+
+    // Node charts
+    nodeCharts.forEach((nc, i) => {
+      const ctx = document.getElementById('chart' + i).getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: globalLabels,
+          datasets: [
+            { label: 'Availability', data: nc.data, borderColor: nc.color, backgroundColor: nc.color + '33', stepped: true, borderWidth: 1.5, pointRadius: 0, fill: true, order: 2, spanGaps: false },
+            { label: 'Both Sinks Down', data: nc.blackout, backgroundColor: hatchPattern, borderColor: '#999', borderWidth: 0, stepped: true, pointRadius: 0, fill: true, order: 1, spanGaps: false },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { filter: item => item.datasetIndex === 0, callbacks: { label: ctx => ctx.raw === 100 ? 'Online' : 'Offline' } },
+            zoom: {
+              zoom: {
+                drag: { enabled: true, backgroundColor: 'rgba(66,133,244,0.15)', borderColor: '#4285f4', borderWidth: 1 },
+                mode: 'x',
+                onZoomComplete: ({chart}) => { syncSlidersFromChart(chart); }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#666', maxTicksLimit: 15, maxRotation: 45 }, grid: { color: '#eee' }, min: 0, max: globalNWindows - 1 },
+            y: { min: 0, max: 100, ticks: { color: '#666', callback: v => v === 100 ? 'Online' : v === 0 ? 'Offline' : '', stepSize: 100 }, grid: { color: '#eee' } }
+          }
+        }
+      });
+      allCharts.push(chart);
+    });
+
+    // ── Range sliders ──────────────────────────────────────────────────────
+    const rangeStart = document.getElementById('rangeStart');
+    const rangeEnd = document.getElementById('rangeEnd');
+    const rangeLabel = document.getElementById('rangeLabel');
+    rangeStart.max = globalNWindows - 1;
+    rangeEnd.max = globalNWindows - 1;
+    rangeEnd.value = globalNWindows - 1;
+
+    function updateRange() {
+      let s = parseInt(rangeStart.value), e = parseInt(rangeEnd.value);
+      if (s > e - 2) {
+        if (this === rangeStart) { s = Math.min(s, e-2); rangeStart.value = s; }
+        else { e = Math.max(e, s+2); rangeEnd.value = e; }
+      }
+      rangeLabel.textContent = globalLabels[s] + '  \u2192  ' + globalLabels[e] + ' SGT';
+      allCharts.forEach(c => { c.options.scales.x.min = s; c.options.scales.x.max = e; c.update('none'); });
+    }
+    rangeStart.addEventListener('input', updateRange);
+    rangeEnd.addEventListener('input', updateRange);
+    rangeLabel.textContent = globalLabels[0] + '  \u2192  ' + globalLabels[globalNWindows-1] + ' SGT';
+
+    // Sync sliders when drag-zooming on any chart
+    function syncSlidersFromChart(chart) {
+      const xScale = chart.scales.x;
+      const s = Math.round(xScale.min);
+      const e = Math.round(xScale.max);
+      rangeStart.value = s;
+      rangeEnd.value = e;
+      rangeLabel.textContent = globalLabels[s] + '  \u2192  ' + globalLabels[e] + ' SGT';
+      // Sync all other charts to same range
+      allCharts.forEach(c => {
+        if (c !== chart) { c.options.scales.x.min = s; c.options.scales.x.max = e; c.update('none'); }
+      });
+    }
+
+    window.resetZoom = function() {
+      rangeStart.value = 0;
+      rangeEnd.value = globalNWindows - 1;
+      rangeLabel.textContent = globalLabels[0] + '  \u2192  ' + globalLabels[globalNWindows-1] + ' SGT';
+      allCharts.forEach(c => { c.options.scales.x.min = 0; c.options.scales.x.max = globalNWindows - 1; c.update('none'); });
+    };
+
+    window.snapToDeployment = function(idx) {
+      const e = globalNWindows - 1;
+      rangeStart.value = idx;
+      rangeEnd.value = e;
+      rangeLabel.textContent = globalLabels[idx] + '  \u2192  ' + globalLabels[e] + ' SGT';
+      allCharts.forEach(c => { c.options.scales.x.min = idx; c.options.scales.x.max = e; c.update('none'); });
+    };
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    const errEl = document.getElementById('error-msg');
+    errEl.textContent = 'Error loading data: ' + err.message;
+    errEl.style.display = 'block';
+    console.error(err);
+  }
+}
+
+// Initial load + auto-refresh
+buildDashboard();
+setInterval(buildDashboard, REFRESH_MS);
+</script>
+</body>
+</html>

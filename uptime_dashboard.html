@@ -55,9 +55,8 @@
 // ── Config ──────────────────────────────────────────────────────────────────
 const SHEET1_ID = '1aA0NgYzl1-P2cEh2VGXSz_0LoxKelR1_Vr-SkVbBcZ4';
 const SHEET2_ID = '1HetOooULPsFL3K3a5ngvBrVHYmdjwkKeJ22DYRG2U08';
-const WINDOW_SEC = 15 * 60;
+const WINDOW_SEC = 60;
 const BUGGY_THRESHOLD = 1767225600;
-const EXPECTED_SCANS = 90;
 const REFRESH_MS = 15 * 60 * 1000;
 const SGT_OFFSET = 8 * 60 * 60 * 1000; // +8h in ms
 const TRIAL_START = 1782097200; // 22 Jun 2026 11:00 SGT
@@ -350,7 +349,7 @@ async function buildDashboard() {
     let html = `
 <h1>Mesh Network Uptime Dashboard</h1>
 <p class="info">Trial period: ${fmtSGT(TRIAL_START)} \u2192 ${fmtSGT(TRIAL_END)} SGT | Last refreshed: ${nowStr} SGT | Auto-refreshes every 15 min</p>
-<p class="info">15-minute windows | Uptime = % of windows where node was online (received any data)</p>
+<p class="info">1-minute windows | Uptime = % of windows where node was online (received any data)</p>
 <p class="legend-info">
   <span class="swatch" style="background: repeating-linear-gradient(45deg, #999, #999 2px, #ddd 2px, #ddd 4px);"></span>
   Hatched areas = both sink nodes down (excluded from mesh node uptime calculation)

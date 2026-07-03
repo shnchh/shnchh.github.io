@@ -60,6 +60,8 @@ const BUGGY_THRESHOLD = 1767225600;
 const EXPECTED_SCANS = 90;
 const REFRESH_MS = 15 * 60 * 1000;
 const SGT_OFFSET = 8 * 60 * 60 * 1000; // +8h in ms
+const TRIAL_START = 1782097200; // 22 Jun 2026 11:00 SGT
+const TRIAL_END   = 1782786600; // 30 Jun 2026 10:30 SGT
 
 const COLORS = ['#e6194b','#3cb44b','#4363d8','#f58231','#911eb4',
                 '#42d4f4','#f032e6','#bfef45','#fabed4','#469990'];
@@ -209,8 +211,9 @@ async function buildDashboard() {
       document.getElementById('error-msg').style.display = 'block';
       return;
     }
-    const gStart = setMin(allSinkWin);
-    const gEnd = setMax(allSinkWin) + WINDOW_SEC;
+    // Fixed trial window
+    const gStart = Math.floor(TRIAL_START / WINDOW_SEC) * WINDOW_SEC;
+    const gEnd = Math.ceil(TRIAL_END / WINDOW_SEC) * WINDOW_SEC;
     const allPossible = new Set();
     for (let t = gStart; t < gEnd; t += WINDOW_SEC) allPossible.add(t);
     const bothDown = new Set([...allPossible].filter(t => !allSinkWin.has(t)));
@@ -236,10 +239,8 @@ async function buildDashboard() {
     const nodes = [...nodeSet].sort((a,b) => parseInt(nodeNumbers[a]||'999') - parseInt(nodeNumbers[b]||'999'));
 
     const timestamps = unique.map(r => parseInt(r['Timestamp (Unix)']));
-    const non15a4Ts = unique.filter(r => (r['Source Node']||'').trim() !== '15A4').map(r => parseInt(r['Timestamp (Unix)']));
     const minTs = arrMin(timestamps);
-    const tMax = non15a4Ts.length ? arrMax(non15a4Ts) : arrMax(timestamps);
-    const tEnd = (Math.floor(tMax / WINDOW_SEC) + 1) * WINDOW_SEC;
+    const tEnd = gEnd;
 
     // Activity map
     const activity = {};
@@ -253,10 +254,9 @@ async function buildDashboard() {
       activity[src][wt].add(sw);
     });
 
-    // Global axis
-    const activeDepTimes = nodes.map(n => deploymentTimes[n] || minTs);
-    const globalTStart = Math.floor(arrMin(activeDepTimes) / WINDOW_SEC) * WINDOW_SEC;
-    const globalNWindows = (tEnd - globalTStart) / WINDOW_SEC;
+    // Global axis (fixed to trial window)
+    const globalTStart = gStart;
+    const globalNWindows = (gEnd - gStart) / WINDOW_SEC;
 
     const globalLabels = [];
     for (let i = 0; i < globalNWindows; i++) {
@@ -301,12 +301,30 @@ async function buildDashboard() {
       });
     });
 
-    // Sink uptime
+    // Sink uptime (overall)
     const totalPossWin = allPossible.size;
     const sinkUptime = {
       EBB0: totalPossWin > 0 ? Math.round(sink1Win.size / totalPossWin * 1000) / 10 : 0,
       '1F18': totalPossWin > 0 ? Math.round(sink2Win.size / totalPossWin * 1000) / 10 : 0,
     };
+
+    // Sink per-window chart data (receive activity per 15-min window)
+    const sinkCharts = [];
+    [{id:'EBB0', name:'Sink 1 (EBB0)', wins:sink1Win, color:'#1565c0'},
+     {id:'1F18', name:'Sink 2 (1F18)', wins:sink2Win, color:'#6a1b9a'}].forEach(sink => {
+      const data = [];
+      let totalPct = 0, validWin = 0;
+      for (let i = 0; i < globalNWindows; i++) {
+        const wt = globalTStart + i * WINDOW_SEC;
+        const hasData = sink.wins.has(wt);
+        const pct = hasData ? 100 : 0;
+        data.push(pct);
+        totalPct += pct;
+        validWin++;
+      }
+      const avgPct = validWin > 0 ? totalPct / validWin : 0;
+      sinkCharts.push({ id: sink.id, displayName: sink.name, data, color: sink.color, avgPct, validWindows: validWin });
+    });
 
     // Map markers
     function statusColor(pct) {
@@ -327,16 +345,15 @@ async function buildDashboard() {
     });
 
     // ── Render ──────────────────────────────────────────────────────────────
-    const cutoffTime = fmtSGT(tMax);
     const nowStr = fmtSGT(Math.floor(Date.now()/1000));
 
     let html = `
-<h1>Live Node Uptime Dashboard <span class="live-badge">LIVE</span></h1>
-<p class="info">Data up to ${cutoffTime} SGT | Last refreshed: ${nowStr} SGT | Auto-refreshes every 15 min</p>
-<p class="info">Each node shown from its deployment time | 15-minute windows | Availability = scan windows received / 90 expected per period</p>
+<h1>Mesh Network Uptime Dashboard</h1>
+<p class="info">Trial period: ${fmtSGT(TRIAL_START)} \u2192 ${fmtSGT(TRIAL_END)} SGT | Last refreshed: ${nowStr} SGT | Auto-refreshes every 15 min</p>
+<p class="info">15-minute windows | Availability = scan windows received / 90 expected per period</p>
 <p class="legend-info">
   <span class="swatch" style="background: repeating-linear-gradient(45deg, #999, #999 2px, #ddd 2px, #ddd 4px);"></span>
-  Hatched areas = both sink nodes down (excluded from uptime calculation)
+  Hatched areas = both sink nodes down (excluded from mesh node uptime calculation)
 </p>
 <div class="map-wrapper"><h2>Deployment Map</h2><div id="map"></div></div>
 
@@ -350,6 +367,19 @@ async function buildDashboard() {
   </div>
   <div style="color:#888; font-size:0.8em; margin-top:4px;">Drag on any chart to zoom in</div>
 </div>`;
+
+    // Sink charts at the top
+    sinkCharts.forEach((sc, i) => {
+      const cls = sc.avgPct >= 80 ? 'good' : (sc.avgPct >= 50 ? 'warn' : 'bad');
+      html += `
+<div class="chart-wrapper">
+  <div class="header-row">
+    <h2 style="color:${sc.color}">${sc.displayName}</h2>
+  </div>
+  <div class="meta">Uptime: <span class="${cls}">${sc.avgPct.toFixed(1)}%</span> (${sc.validWindows} windows)</div>
+  <div class="chart-container"><canvas id="sinkChart${i}"></canvas></div>
+</div>`;
+    });
 
     nodeCharts.forEach((nc, i) => {
       const cls = nc.avgPct >= 80 ? 'good' : (nc.avgPct >= 50 ? 'warn' : 'bad');
@@ -411,6 +441,41 @@ async function buildDashboard() {
 
     // ── Charts ─────────────────────────────────────────────────────────────
     const allCharts = [];
+
+    // Sink charts
+    sinkCharts.forEach((sc, i) => {
+      const ctx = document.getElementById('sinkChart' + i).getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: globalLabels,
+          datasets: [
+            { label: 'Uptime', data: sc.data, borderColor: sc.color, backgroundColor: sc.color + '33', stepped: true, borderWidth: 1.5, pointRadius: 0, fill: true }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ctx.raw === 100 ? 'Online' : 'Offline' } },
+            zoom: {
+              zoom: {
+                drag: { enabled: true, backgroundColor: 'rgba(66,133,244,0.15)', borderColor: '#4285f4', borderWidth: 1 },
+                mode: 'x',
+                onZoomComplete: ({chart}) => { syncSlidersFromChart(chart); }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#666', maxTicksLimit: 15, maxRotation: 45 }, grid: { color: '#eee' }, min: 0, max: globalNWindows - 1 },
+            y: { min: 0, max: 100, ticks: { color: '#666', callback: v => v === 100 ? 'Online' : v === 0 ? 'Offline' : '', stepSize: 100 }, grid: { color: '#eee' } }
+          }
+        }
+      });
+      allCharts.push(chart);
+    });
+
+    // Node charts
     nodeCharts.forEach((nc, i) => {
       const ctx = document.getElementById('chart' + i).getContext('2d');
       const chart = new Chart(ctx, {

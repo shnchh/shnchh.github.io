@@ -899,14 +899,20 @@
         document.getElementById('region-name').textContent = (REGION_COORDS[getRegionCode()] || { name: getRegionCode() }).name;
         
         // API Key Management
+        let sessionApiKey = '';
+
         function getApiKey() {
-            return localStorage.getItem('ebirdApiKey') || '';
+            return sessionApiKey || localStorage.getItem('ebirdApiKey') || '';
         }
         
         function showApiKeyModal() {
             const modal = document.getElementById('api-key-modal');
             const input = document.getElementById('api-key-input');
-            input.value = localStorage.getItem('ebirdApiKey') || '';
+            const storedKey = localStorage.getItem('ebirdApiKey') || '';
+            input.value = storedKey || sessionApiKey;
+            document.getElementById('save-api-key-locally').checked = Boolean(storedKey);
+            document.getElementById('remove-api-key-btn').disabled = !storedKey;
+            document.getElementById('api-key-storage-status').textContent = '';
             modal.style.display = 'flex';
             input.focus();
         }
@@ -924,11 +930,27 @@
                 return;
             }
             
-            localStorage.setItem('ebirdApiKey', key);
+            if (document.getElementById('save-api-key-locally').checked) {
+                localStorage.setItem('ebirdApiKey', key);
+                sessionApiKey = '';
+            } else {
+                localStorage.removeItem('ebirdApiKey');
+                sessionApiKey = key;
+            }
             hideApiKeyModal();
             
             // Auto-fetch data with new key
             fetchLiveData();
+        }
+
+        function removeStoredApiKey() {
+            localStorage.removeItem('ebirdApiKey');
+            document.getElementById('api-key-input').value = sessionApiKey;
+            document.getElementById('save-api-key-locally').checked = false;
+            document.getElementById('remove-api-key-btn').disabled = true;
+            document.getElementById('api-key-storage-status').textContent = sessionApiKey
+                ? 'Saved key removed. The current session key remains active until you close this page.'
+                : 'Saved key removed from this browser.';
         }
         
         function openApiKeyPage() {
@@ -1083,6 +1105,7 @@
         }
 
             document.getElementById('save-api-key-btn').addEventListener('click', saveApiKey);
+            document.getElementById('remove-api-key-btn').addEventListener('click', removeStoredApiKey);
             document.getElementById('close-hotspots-btn').addEventListener('click', hideHotspotsModal);
             document.getElementById('fetch-btn').addEventListener('click', fetchLiveData);
             document.getElementById('update-api-key-btn').addEventListener('click', showApiKeyModal);

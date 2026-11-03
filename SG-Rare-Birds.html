@@ -370,20 +370,30 @@
                     <label class="block text-slate-300 text-sm font-medium mb-2">
                         Enter your eBird API Key:
                     </label>
-                    <input type="text" id="api-key-input" 
+                    <input type="password" id="api-key-input" 
                            placeholder="e.g., abc123def456ghi789jkl012"
+                           autocomplete="off" spellcheck="false"
                            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono">
-                    <p class="text-slate-500 text-xs mt-2">
+                    <label class="flex items-center gap-2 text-slate-300 text-sm mt-3">
+                        <input type="checkbox" id="save-api-key-locally" checked class="accent-emerald-500">
+                        Save key on this browser
+                    </label>
+                    <p class="text-slate-500 text-xs mt-2" id="api-key-storage-help">
                         <i class="fa-solid fa-lock mr-1"></i>
-                        Your API key is stored locally in your browser and never sent anywhere except eBird's servers.
+                        When unchecked, the key is used only until you close this page. The key is sent to eBird when fetching data.
                     </p>
                 </div>
                 
-                <div class="flex gap-3">
+                <div class="flex flex-col gap-3">
                     <button id="save-api-key-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-lg font-semibold transition">
                         <i class="fa-solid fa-check mr-2"></i>
                         Save & Continue
                     </button>
+                    <button id="remove-api-key-btn" type="button" class="w-full bg-slate-700 hover:bg-red-900/60 text-slate-300 hover:text-white px-4 py-2 rounded-lg font-medium transition">
+                        <i class="fa-solid fa-trash-can mr-2"></i>
+                        Remove saved key from this browser
+                    </button>
+                    <p id="api-key-storage-status" class="text-emerald-300 text-xs text-center" role="status" aria-live="polite"></p>
                 </div>
                 
                 <p class="text-slate-500 text-xs mt-4 text-center">

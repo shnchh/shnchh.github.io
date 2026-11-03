@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' https: data:; connect-src https://api.ebird.org https://api.inaturalist.org; base-uri 'none'; object-src 'none'; form-action 'none'; frame-src 'none'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rare Bird Alerts - eBird Notable Observations</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="rare_birds_assets/leaflet-1.9.4.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="></script>
+    <link rel="stylesheet" href="rare_birds_assets/rare-birds.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+        }
+
+        header.main-header {
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            gap: 12px;
+        }
+        header.main-header > .flex.items-center.gap-4:first-child {
+            flex: 1 1 240px;
+            min-width: 0;
+        }
+        header.main-header > .flex.items-center.gap-4:first-child > .w-12 {
+            flex-shrink: 0;
+        }
+        .region-selector-container {
+            flex: 1 1 260px;
+            min-width: 0;
+        }
+        .region-selector-container > .relative {
+            flex: 1;
+            min-width: 0;
+        }
+        #region-search {
+            width: 100%;
+            min-width: 0;
+        }
+        #region-suggestions {
+            max-width: calc(100vw - 64px);
+        }
+        .days-filter-container,
+        .header-buttons {
+            flex-shrink: 0;
+        }
+        #days-value {
+            white-space: nowrap;
+        }
+        .main-container {
+            flex: 1;
+            height: auto;
+            min-height: 0;
+        }
+        #sidebar {
+            flex-shrink: 0;
+        }
+        .main-area {
+            min-width: 0;
+            min-height: 0;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+            background: #1e293b;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .leaflet-popup-tip {
+            background: #1e293b;
+        }
+        .leaflet-popup-content {
+            margin: 0;
+            min-width: 280px;
+        }
+        
+        .custom-marker {
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 3px solid #fbbf24;
+            overflow: hidden;
+            background: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-marker img {
+            width: 120%;
+            height: 120%;
+            object-fit: cover;
+            object-position: center center;
+            transform: scale(1.27);
+        }
+        
+        .bird-card {
+            transition: all 0.3s ease;
+        }
+        .bird-card:hover {
+            transform: translateX(4px);
+            background: #334155 !important;
+        }
+        
+        .slider-track {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            background: linear-gradient(to right, #f59e0b 0%, #f59e0b var(--val), #334155 var(--val), #334155 100%);
+            border-radius: 4px;
+            outline: none;
+        }
+        .slider-track::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #f59e0b;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.5);
+        }
+        .slider-track::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: #f59e0b;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .loading-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        
+        .bird-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #334155;
+        }
+        
+
+        .confirmed-badge {
+            font-size: 9px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+        }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            header.main-header {
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 12px 16px;
+            }
+            header.main-header .flex.items-center.gap-4:first-child {
+                flex: 1;
+            }
+            header.main-header .flex.items-center.gap-4:first-child h1 {
+                font-size: 1rem;
+            }
+            header.main-header .flex.items-center.gap-4:first-child p {
+                font-size: 0.7rem;
+            }
+            header.main-header .flex.items-center.gap-4:first-child .w-12 {
+                width: 36px;
+                height: 36px;
+            }
+            .days-filter-container {
+                order: 4;
+                width: 100%;
+                justify-content: center;
+            }
+            .days-filter-container span:first-child {
+                display: none;
+            }
+            .region-selector-container {
+                order: 3;
+                flex: 1 1 100%;
+            }
+            .header-buttons {
+                order: 2;
+            }
+            #fetch-btn span {
+                display: none;
+            }
+            #fetch-btn {
+                padding: 8px 12px;
+            }
+            
+            /* Sidebar as bottom sheet on mobile */
+            .main-container {
+                flex-direction: column;
+            }
+            #sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100% !important;
+                height: 55vh;
+                z-index: 1000;
+                border-radius: 16px 16px 0 0;
+                border-top: 2px solid #475569;
+                transform: translateY(calc(100% - 60px));
+                transition: transform 0.3s ease;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+            }
+            #sidebar.expanded {
+                transform: translateY(0);
+            }
+            #sidebar-handle {
+                display: flex;
+            }
+            #map {
+                height: 100% !important;
+            }
+            .main-area {
+                flex: 1;
+                min-height: 0;
+            }
+        }
+        
+        #sidebar-handle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            cursor: pointer;
+            background: #1e293b;
+            border-radius: 16px 16px 0 0;
+        }
+        #sidebar-handle .handle-bar {
+            width: 40px;
+            height: 4px;
+            background: #64748b;
+            border-radius: 2px;
+        }
+        #sidebar-handle .handle-text {
+            margin-left: 12px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        /* API Key Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .modal-content {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-content::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        
+        /* Map cursor */
+        #map {
+            cursor: crosshair;
+        }
+        .map-dark-mode .leaflet-tile-pane {
+            filter: invert(1) hue-rotate(180deg) brightness(0.78) saturate(0.75) contrast(1.15);
+        }
+        
+        /* Ensure dropdowns aren't clipped */
+        .region-selector-container,
+        header.main-header {
+            overflow: visible !important;
+        }
+        
+        /* Hotspots list scrollbar */
+        #hotspots-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        #hotspots-list::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        #hotspots-list::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+    
+    <!-- API Key Modal -->
+    <div id="api-key-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                        <i class="fa-solid fa-key text-white text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">eBird API Key Required</h2>
+                </div>
+                
+                <p class="text-slate-300 mb-4">
+                    This app requires an eBird API key to fetch rare bird alerts. Don't worry - it's free and takes less than a minute!
+                </p>
+                
+                <div class="bg-slate-700/50 rounded-lg p-4 mb-4">
+                    <h3 class="text-amber-400 font-semibold mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info"></i>
+                        How to get your free API key:
+                    </h3>
+                    <ol class="text-slate-300 text-sm space-y-2 list-decimal list-inside">
+                        <li>Visit <a href="https://ebird.org/api/keygen" target="_blank" class="text-sky-400 hover:text-sky-300 underline">ebird.org/api/keygen</a></li>
+                        <li>Fill out the simple form (name, email, intended use)</li>
+                        <li>Check your email for the API key</li>
+                        <li>Copy and paste it below</li>
+                    </ol>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-slate-300 text-sm font-medium mb-2">
+                        Enter your eBird API Key:
+                    </label>
+                    <input type="text" id="api-key-input" 
+                           placeholder="e.g., abc123def456ghi789jkl012"
+                           class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono">
+                    <p class="text-slate-500 text-xs mt-2">
+                        <i class="fa-solid fa-lock mr-1"></i>
+                        Your API key is stored locally in your browser and never sent anywhere except eBird's servers.
+                    </p>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button id="save-api-key-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-lg font-semibold transition">
+                        <i class="fa-solid fa-check mr-2"></i>
+                        Save & Continue
+                    </button>
+                </div>
+                
+                <p class="text-slate-500 text-xs mt-4 text-center">
+                    You can update your API key anytime by clicking the <i class="fa-solid fa-key"></i> button in the header.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Nearby Hotspots Modal -->
+    <div id="hotspots-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                            <i class="fa-solid fa-location-dot text-white text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white">Nearby Hotspots</h2>
+                    </div>
+                    <button id="close-hotspots-btn" class="text-slate-400 hover:text-white transition">
+                        <i class="fa-solid fa-times text-2xl"></i>
+                    </button>
+                </div>
+                
+                <p class="text-slate-300 mb-4" id="hotspots-location-info">
+                    Searching for hotspots near this location...
+                </p>
+                
+                <div id="hotspots-list" class="space-y-2 max-h-96 overflow-y-auto">
+                    <!-- Hotspots will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header class="main-header bg-slate-800/90 backdrop-blur border-b border-slate-700 px-6 py-4 flex items-center justify-between relative" style="overflow: visible; z-index: 9999;">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-crow text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white"><span id="region-name">Singapore</span> Rare Bird Alerts</h1>
+                <p class="text-slate-400 text-sm">eBird Notable Observations</p>
+            </div>
+        </div>
+        
+        <!-- Region Search -->
+        <div class="region-selector-container flex items-center gap-3 bg-slate-700/50 rounded-xl px-4 py-3 relative">
+            <i class="fa-solid fa-globe text-slate-400"></i>
+            <div class="relative">
+                <input type="text" 
+                       id="region-search" 
+                       placeholder="Search region or click map to find hotspots..." 
+                       class="bg-transparent text-white text-sm font-medium focus:outline-none w-64 placeholder-slate-500"
+                       autocomplete="off"
+                       title="Type to search, or click anywhere on the map to discover nearby eBird hotspots">
+                <!-- Autocomplete dropdown -->
+                <div id="region-suggestions" class="hidden absolute top-full left-0 mt-2 w-80 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-96 overflow-y-auto" style="z-index: 10001;">
+                </div>
+            </div>
+            <button id="region-search-btn" class="text-slate-400 hover:text-white transition" title="Search region">
+                <i class="fa-solid fa-search"></i>
+            </button>
+        </div>
+        
+        <!-- Days Filter -->
+        <div class="days-filter-container flex items-center gap-4 bg-slate-700/50 rounded-xl px-5 py-3">
+            <span class="text-slate-300 text-sm font-medium">Last</span>
+            <input type="range" id="days-slider" min="1" max="30" value="3" 
+                   class="slider-track w-32" style="--val: 10%;">
+            <span id="days-value" class="text-amber-400 font-bold text-lg min-w-[3rem]">3 days</span>
+        </div>
+        
+        <!-- Refresh Button & Dark Mode Toggle -->
+        <div class="header-buttons flex gap-2">
+            <button id="fetch-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition">
+                <i class="fa-solid fa-sync" id="fetch-icon"></i>
+                <span id="fetch-text">Fetch Live</span>
+            </button>
+            <button id="update-api-key-btn" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition" title="Update API key">
+                <i class="fa-solid fa-key"></i>
+            </button>
+            <button id="dark-mode-btn" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition" title="Toggle dark mode">
+                <i class="fa-solid fa-moon" id="dark-mode-icon"></i>
+            </button>
+        </div>
+    </header>
+    
+    <div class="main-container flex h-[calc(100vh-80px)]">
+        <!-- Sidebar: Bird List -->
+        <aside id="sidebar" class="w-96 bg-slate-800 border-r border-slate-700 flex flex-col">
+            <!-- Mobile drag handle -->
+            <div id="sidebar-handle">
+                <div class="handle-bar"></div>
+                <span class="handle-text">Swipe up to see bird list</span>
+            </div>
+            
+            <div class="p-4 border-b border-slate-700">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="search-input" placeholder="Search species..." 
+                           class="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+            
+            <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                <span class="text-slate-300 text-sm">
+                    <span id="alert-count" class="text-amber-400 font-bold">0</span> alerts found
+                </span>
+                <span id="date-range" class="text-slate-500 text-xs"></span>
+            </div>
+            
+            <div id="bird-list" class="flex-1 overflow-y-auto sidebar-scroll p-2 space-y-2">
+                <!-- Bird cards will be inserted here -->
+                <div id="loading-state" class="text-center py-12 text-slate-500">
+                    <i class="fa-solid fa-crow text-4xl mb-4 text-amber-400"></i>
+                    <p class="text-amber-300">Welcome to Rare Bird Alerts</p>
+                    <p class="text-sm mt-2">Select a region and click "Fetch Live" to get started</p>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Map -->
+        <main class="main-area flex-1 relative">
+            <div id="map"></div>
+        </main>
+    </div>
+    
+    <script src="rare_birds_assets/rare-birds.js"></script>
+</body>
+</html>

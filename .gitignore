@@ -1,0 +1,9 @@
+# API Configuration
+secrets.json
+
+# Protected/Private files
+Urban Birds Report.html
+static_dashboard.html
+
+# Temporary files
+/Temp/

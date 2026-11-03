@@ -10,12 +10,12 @@
     <link rel="stylesheet" href="rare_birds_assets/rare-birds.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap');
         
         body {
-            font-family: 'Inter', sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
+            font-family: 'DM Sans', sans-serif;
+            background: #f2f4ec;
+            color: #20352b;
             display: flex;
             flex-direction: column;
             height: 100dvh;
@@ -333,6 +333,192 @@
         #hotspots-list::-webkit-scrollbar-thumb {
             background: #475569;
             border-radius: 3px;
+        }
+
+        :root {
+            --field-ink: #20352b;
+            --field-green: #183b30;
+            --field-green-soft: #315747;
+            --field-paper: #f2f4ec;
+            --field-white: #fbfcf8;
+            --field-line: #d9e1d5;
+            --field-rust: #c76b43;
+            --field-muted: #748477;
+        }
+
+        body {
+            background: var(--field-paper);
+            color: var(--field-ink);
+        }
+
+        header.main-header {
+            background: var(--field-green) !important;
+            border-color: #315747 !important;
+            box-shadow: 0 3px 14px rgba(24, 59, 48, 0.12);
+        }
+        header.main-header > .flex.items-center.gap-4:first-child > div:first-child {
+            background: var(--field-rust) !important;
+            border-radius: 9px !important;
+            box-shadow: none !important;
+        }
+        header.main-header h1 {
+            color: #fbfcf8 !important;
+            font-family: 'Fraunces', Georgia, serif;
+            font-weight: 500;
+        }
+        header.main-header p {
+            color: #b7c9bd !important;
+        }
+        .region-selector-container,
+        .days-filter-container {
+            background: #244a3c !important;
+            border: 1px solid #416352;
+            border-radius: 7px !important;
+        }
+        #region-search { color: #fbfcf8; }
+        #region-search::placeholder { color: #b7c9bd; }
+        #region-search-btn { color: #c8d6ca !important; }
+        #days-value { color: #f1b476 !important; }
+        .slider-track {
+            background: linear-gradient(to right, #d98456 0%, #d98456 var(--val), #52705f var(--val), #52705f 100%);
+        }
+        .slider-track::-webkit-slider-thumb,
+        .slider-track::-moz-range-thumb {
+            background: #e69b68;
+            box-shadow: 0 1px 5px rgba(10, 30, 20, 0.28);
+        }
+        #fetch-btn {
+            background: #d2784c !important;
+            color: #fffdf8 !important;
+            border-radius: 6px !important;
+        }
+        #fetch-btn:hover { background: #e08b5f !important; }
+        #update-api-key-btn,
+        #dark-mode-btn {
+            background: #315747 !important;
+            color: #f4f6ef !important;
+            border-radius: 6px !important;
+        }
+        #update-api-key-btn:hover,
+        #dark-mode-btn:hover { background: #416755 !important; }
+
+        #sidebar {
+            background: #edf1e8 !important;
+            border-color: var(--field-line) !important;
+        }
+        #sidebar > .p-4 { border-color: var(--field-line) !important; }
+        #sidebar input#search-input {
+            background: var(--field-white) !important;
+            border-color: var(--field-line) !important;
+            color: var(--field-ink) !important;
+            border-radius: 5px !important;
+        }
+        #sidebar input#search-input::placeholder { color: #89978a; }
+        #alert-count { color: var(--field-rust) !important; }
+        #date-range { color: var(--field-muted) !important; }
+        #bird-list { background: #edf1e8; }
+        .bird-card {
+            background: var(--field-white) !important;
+            border: 1px solid var(--field-line) !important;
+            border-left: 3px solid #99ad8f !important;
+            border-radius: 5px !important;
+            box-shadow: 0 2px 5px rgba(32, 53, 43, 0.035);
+            transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+        .bird-card:hover {
+            background: #fff !important;
+            border-left-color: var(--field-rust) !important;
+            box-shadow: 0 5px 14px rgba(32, 53, 43, 0.09);
+            transform: translateX(3px);
+        }
+        .bird-card h3 { color: var(--field-ink) !important; }
+        .bird-card .text-slate-400 { color: #718174 !important; }
+        .bird-card .text-slate-500 { color: #8a968a !important; }
+        .bird-card .text-emerald-400 { color: #54856a !important; }
+        .bird-card .text-amber-400 { color: var(--field-rust) !important; }
+        .bird-thumb {
+            border-radius: 3px;
+            background: #dce5d8;
+        }
+        .confirmed-badge {
+            background: #477a58;
+            border-radius: 3px;
+        }
+        #sidebar-handle {
+            background: #edf1e8;
+            border-bottom: 1px solid var(--field-line);
+        }
+        #sidebar-handle .handle-bar { background: #9bab9b; }
+        #sidebar-handle .handle-text { color: #647568; }
+
+        #region-suggestions {
+            background: var(--field-white) !important;
+            border-color: var(--field-line) !important;
+            border-radius: 5px !important;
+        }
+        .leaflet-popup-content-wrapper,
+        .leaflet-popup-tip {
+            background: var(--field-green);
+            color: #f2f4ec;
+        }
+        .leaflet-popup-content-wrapper { border-radius: 6px; }
+        .leaflet-popup-content { color: #f2f4ec; }
+
+        .modal-content {
+            background: var(--field-white);
+            border: 1px solid var(--field-line);
+            border-radius: 8px;
+            color: var(--field-ink);
+            box-shadow: 0 24px 80px rgba(13, 35, 25, 0.3);
+        }
+        .modal-overlay { background: rgba(15, 35, 27, 0.72); }
+        .modal-content h2 {
+            color: var(--field-ink) !important;
+            font-family: 'Fraunces', Georgia, serif;
+            font-weight: 500;
+        }
+        .modal-content .bg-gradient-to-br {
+            background: var(--field-rust) !important;
+            border-radius: 8px !important;
+        }
+        .modal-content .text-slate-300,
+        .modal-content .text-slate-400,
+        .modal-content .text-slate-500 { color: #647568 !important; }
+        .modal-content .bg-slate-700\/50 {
+            background: #edf1e8 !important;
+            border: 1px solid var(--field-line);
+            border-radius: 5px !important;
+        }
+        .modal-content .text-amber-400 { color: #a95434 !important; }
+        .modal-content a.text-sky-400 { color: #39717a !important; }
+        .modal-content input[type="password"] {
+            background: #fff !important;
+            border-color: #cbd7ca !important;
+            color: var(--field-ink) !important;
+        }
+        .modal-content input[type="password"]::placeholder { color: #9aa79a; }
+        #save-api-key-btn {
+            background: #477a58 !important;
+            border-radius: 5px !important;
+        }
+        #save-api-key-btn:hover { background: #568b67 !important; }
+        #remove-api-key-btn {
+            background: transparent !important;
+            border: 1px solid var(--field-line);
+            border-radius: 5px !important;
+            color: #647568 !important;
+        }
+        #remove-api-key-btn:hover {
+            background: #f7e9e3 !important;
+            color: #9e4e32 !important;
+        }
+        #close-hotspots-btn { color: #647568 !important; }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                border-top-color: #9bab9b !important;
+                border-radius: 12px 12px 0 0;
+            }
         }
     </style>
 </head>
